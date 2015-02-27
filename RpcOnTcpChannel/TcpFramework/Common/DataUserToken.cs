@@ -4,6 +4,12 @@ namespace TcpFramework.Common
 {
     internal class DataUserToken
     {
+        //用于计算当前对应的socket处理耗时使用
+        internal DateTime startTime;
+
+        //在MesssagePreparer中提取待发送的消息针对此usertoken的messageTokenId进行修正赋值
+        internal int messageTokenId = 0;
+
         internal readonly int bufferOffsetReceive;
         internal readonly int permanentReceiveMessageOffset;        
         internal readonly int receivePrefixLength;
@@ -38,7 +44,8 @@ namespace TcpFramework.Common
         }
 
         internal void Reset()
-        {            
+        {
+            this.messageTokenId = 0;
             this.receivedPrefixBytesDoneCount = 0;
             this.receivedMessageBytesDoneCount = 0;
             this.recPrefixBytesDoneThisOp = 0;
