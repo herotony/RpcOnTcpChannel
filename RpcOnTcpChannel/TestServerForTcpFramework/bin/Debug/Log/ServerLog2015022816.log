@@ -1,0 +1,7 @@
+[16:50:36,757] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:1 INFO  [TcpFramework.Common.LogManager.Log] [4]
+[16:51:07,507] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:2 INFO  [TcpFramework.Common.LogManager.Log] [6]
+[16:53:01,552] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:3 INFO  [TcpFramework.Common.LogManager.Log] [7]
+[16:53:46,545] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:1 INFO  [TcpFramework.Common.LogManager.Log] [3]
+[16:53:56,590] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:2 INFO  [TcpFramework.Common.LogManager.Log] [3]
+[16:54:00,250] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:3 INFO  [TcpFramework.Common.LogManager.Log] [5]
+[16:54:12,510] ProcessReceive ERROR: ConnectionReset, receiveSendToken sessionid:4 INFO  [TcpFramework.Common.LogManager.Log] [3]

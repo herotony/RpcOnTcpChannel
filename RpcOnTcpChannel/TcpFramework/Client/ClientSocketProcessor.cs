@@ -111,7 +111,7 @@ namespace TcpFramework.Client
                             ReceiveDataCompleteCallback(receiveSendToken.messageTokenId, null);
                         }
 
-                        maxConcurrentConnection.Release();
+                        this.maxConcurrentConnection.Release();
                         LogManager.Log(string.Empty, new ArgumentException("\r\nError in I/O Completed, LastOperation: " + e.LastOperation));
                     }
                     break;
@@ -172,29 +172,19 @@ namespace TcpFramework.Client
                
                 receiveSendToken.Reset();
 
-                //If we have not sent all the messages, get the next message, and
-                //loop back to StartSend.
-                if (receiveSendToken.sendDataHolder.NumberOfMessageHadSent < this.numberMessagesOfPerConnection)
+                //receiveSendToken.sendDataHolder.NumberOfMessageHadSent在ProcessSend成功后修正加一
+                //这里是等待回传数据后，开始下次发送前的判断，直至将List<Message>全部发送完毕为止，
+                //List<Message>中的数量由调用方控制
+                if (receiveSendToken.sendDataHolder.ArrayOfMessageToSend.Count > receiveSendToken.sendDataHolder.NumberOfMessageHadSent)
                 {
-                    if (receiveSendToken.sendDataHolder.ArrayOfMessageToSend.Count > receiveSendToken.sendDataHolder.NumberOfMessageHadSent)
-                    {                       
-                        MessagePreparer.GetDataToSend(receiveSendEventArgs);
-                        StartSend(receiveSendEventArgs);
-                    }
-                    else
-                    {
-                        receiveSendToken.sendDataHolder.ArrayOfMessageToSend = null;
-                        StartDisconnect(receiveSendEventArgs);
-                    }
-
+                    MessagePreparer.GetDataToSend(receiveSendEventArgs);
+                    StartSend(receiveSendEventArgs);
                 }
                 else
                 {
-                    //Since we have sent all the messages that we planned to send,
-                    //time to disconnect.                    
                     receiveSendToken.sendDataHolder.ArrayOfMessageToSend = null;
                     StartDisconnect(receiveSendEventArgs);
-                }
+                }                
             }
             else
             {                

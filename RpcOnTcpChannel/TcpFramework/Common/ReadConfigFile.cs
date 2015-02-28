@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 
 using TcpFramework.Client;
+using TcpFramework.Server;
 
 
 namespace TcpFramework.Common
@@ -24,8 +25,7 @@ namespace TcpFramework.Common
         private static int maxDataSocketCount = 0;
         private static int bufferSize = 0;
         private static int timeOutByMS = 0;
-        private static int numberSendCountPerConnection = 1;
-        private static int queueRequestConnectCount = 0;
+        private static int numberSendCountPerConnection = 1;        
 
         static ReadConfigFile() {            
                 
@@ -140,12 +140,68 @@ namespace TcpFramework.Common
                     maxDataSocketCount, bufferSize, receivePrefixLength, sendPrefixLength, opsToPreAllocate, timeOutByMS);
             }
             else
-                throw new ArgumentNullException("SocketClientSettings");	
+                throw new ArgumentNullException("ClientSettings");	
+        }
+
+        internal static ServerSetting GetServerSetting()
+        {
+            int shouldBingoCount = 4;
+            int actualBingoCount = 0;
+
+            Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting();
+
+            foreach (string key in dictOriginalSetting.Keys)
+            {
+                if (string.IsNullOrEmpty(key))
+                    continue;
+
+                string lowerKey = key.ToLower().Trim();
+                string value = dictOriginalSetting[key];
+
+                if (lowerKey.StartsWith("hostinfo"))
+                {
+                    IPInfo = ParseHost(value);
+                    if (IPInfo == null)
+                        return null;
+
+                    actualBingoCount++;
+
+                }
+                else if (lowerKey.StartsWith("connectsocket_count"))
+                {
+                    if (!int.TryParse(value, out maxConnectSocketCount))
+                        return null;
+
+                    actualBingoCount++;
+
+                }
+                else if (lowerKey.StartsWith("datasocket_count"))
+                {
+                    if (!int.TryParse(value, out maxDataSocketCount))
+                        return null;
+
+                    actualBingoCount++;
+                }
+                else if (lowerKey.StartsWith("buffersize"))
+                {
+                    if (!int.TryParse(value, out bufferSize))
+                        return null;
+
+                    actualBingoCount++;
+                }               
+
+            }
+
+            if (actualBingoCount.Equals(shouldBingoCount))
+            {
+                return new ServerSetting(IPInfo, maxConnectSocketCount,maxDataSocketCount, bufferSize);
+            }
+            else
+                throw new ArgumentNullException("ServerSettings");
         }
 
         private static IPEndPoint ParseHost(string value)
         {
-
             string[] arr = value.Split('|');
 
             if (value.Length < 2)

@@ -54,7 +54,13 @@ namespace TcpFramework.Client
 
         private static void Init() {
 
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+
             clientSetting = ReadConfigFile.GetClientSetting();
+
+            timeOutByMS = clientSetting.timeOutByMS;
 
             //初始化后，不可更改！
             bufferManager = new BufferManager(clientSetting.bufferSize * clientSetting.opsToPreAllocate * clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize * clientSetting.opsToPreAllocate);
@@ -109,10 +115,18 @@ namespace TcpFramework.Client
             threadClear.IsBackground = true;//进程结束则直接干掉本线程即可，无需等待!
             threadClear.Start();
 
+            threadSending = new Thread(new ThreadStart(SendMessageOverAndOver));
+            threadSending.IsBackground = true;
+            threadSending.Start();
+
+            sw.Stop();
+
+            LogManager.Log(string.Format("SocketClient Init by FirstInvoke Completed! ConsumeTime:{0} ms", sw.ElapsedMilliseconds));
+
         }
 
-        //唯一对外发送接口
-        public static byte[] PushSendDataToPool(byte[] sendData, ref string message)
+        //唯一对外发送接口，在相关场景中，该方法的调用方应该考虑使用线程池或Task来控制并发量！
+        public static byte[] SendRequest(byte[] sendData, ref string message)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -149,14 +163,88 @@ namespace TcpFramework.Client
                 return null;
             }
 
-            if (!TryGetResult(_tokenId, out retData))
+            bool getResult = TryGetResult(_tokenId, out retData);
+
+            sw.Stop();
+
+            if (!getResult)
                 message = string.Format("Try get retdata from dictionary failed on MsgTokenId:{0}! consumetime:{1} ms", _tokenId, sw.ElapsedMilliseconds);
             else
                 message = string.Format("get retdata sucessfully! MsgTokenId:{0} reddata length:{1} consumetime:{2} ms", _tokenId, retData.Length, sw.ElapsedMilliseconds);
 
-            sw.Stop();
-
             return retData;
+        }
+
+        //循环发送线程方法
+        private static void SendMessageOverAndOver()
+        {
+            List<Message> listSend = new List<Message>();
+
+            bool dequeueOk = false;
+
+            Message firstMsg = null;
+            Message msg = null;
+
+            while (true)
+            {
+                try
+                {                   
+                    bool isFirstInPerLoop = true;
+
+                    dequeueOk = SendingMessages.TryDequeue(out firstMsg);
+
+                    while (dequeueOk)
+                    {
+                        if (isFirstInPerLoop && firstMsg != null)
+                        {
+                            isFirstInPerLoop = false;
+                            firstMsg.StartTime = DateTime.Now;
+
+                            //待转交saea
+                            listSend.Add(firstMsg);
+                        }
+                        else
+                        {
+                            if (msg != null)
+                            {
+                                msg.StartTime = DateTime.Now;
+
+                                //待转交saea
+                                listSend.Add(msg);
+                            }
+                        }
+
+                        if (listSend.Count > 0)
+                        {                          
+                            if (listSend.Count >= clientSetting.numberOfMessagesPerConnection)
+                            {
+                                processor.SendMessage(listSend, clientSetting.serverEndPoint);
+                                listSend = new List<Message>();
+                            }
+                        }
+
+                        dequeueOk = SendingMessages.TryDequeue(out msg);
+                    }
+
+                    //确保长连接多发时，不会因为小于多发的数量而此时队列没数据了导致的发送丢失
+                    if (listSend.Count > 0)
+                    {
+                        processor.SendMessage(listSend, clientSetting.serverEndPoint);
+                        listSend = new List<Message>();
+                    }
+
+                }
+                catch (InvalidOperationException e)
+                {
+                    LogManager.Log(string.Format("SendingMessages queue maybe empty(count:{0})", SendingMessages.Count), e);
+                }
+                catch (Exception otherError)
+                {
+                    LogManager.Log("SendMessageOverAndOver occur Error!", otherError);
+                }
+
+                Thread.Sleep(0);
+            }
         }
 
         internal static bool TryAdd(int tokenId, byte[] retData)

@@ -40,7 +40,7 @@ namespace TcpFramework.Common
                 userToken.recPrefixBytesDoneThisOp = 0;
             }
 
-            return 0;
+            return remainingBytesToProcess;
         }
     }
 }

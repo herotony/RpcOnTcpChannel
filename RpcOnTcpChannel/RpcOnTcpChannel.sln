@@ -5,6 +5,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcFramework", "RpcFramewor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpFramework", "TcpFramework\TcpFramework.csproj", "{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClientForTcpFramework", "TestTcpFramework\TestClientForTcpFramework.csproj", "{7395B813-BD36-45BC-BB55-6D707DA53567}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServerForTcpFramework", "TestServerForTcpFramework\TestServerForTcpFramework.csproj", "{93100866-EBE3-4C00-BC48-3940938320D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,14 @@ Global
 		{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7395B813-BD36-45BC-BB55-6D707DA53567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7395B813-BD36-45BC-BB55-6D707DA53567}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7395B813-BD36-45BC-BB55-6D707DA53567}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7395B813-BD36-45BC-BB55-6D707DA53567}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93100866-EBE3-4C00-BC48-3940938320D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93100866-EBE3-4C00-BC48-3940938320D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93100866-EBE3-4C00-BC48-3940938320D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93100866-EBE3-4C00-BC48-3940938320D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
