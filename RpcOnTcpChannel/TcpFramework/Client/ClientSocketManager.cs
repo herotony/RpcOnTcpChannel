@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Diagnostics;
 
+
 using TcpFramework.Common;
 
 namespace TcpFramework.Client
@@ -46,6 +47,8 @@ namespace TcpFramework.Client
         private static SocketAsyncEventArgPool poolOfConnectEventArgs;
 
         private static ClientSocketProcessor processor;
+
+        public delegate byte[] PickResult(int tokenId);
 
         static ClientSocketManager() {
 
@@ -101,7 +104,7 @@ namespace TcpFramework.Client
 
                 ClientUserToken receiveSendToken = new ClientUserToken(eventArgObjectForPool.Offset, eventArgObjectForPool.Offset + clientSetting.bufferSize, clientSetting.receivePrefixLength, clientSetting.sendPrefixLength);
 
-                //用于传递待发送的数据，一旦完成发送可以重新new一个。
+                //用于传递待发送的数据，一旦完成发送必须重新new一个。
                 receiveSendToken.CreateNewSendDataHolder();
                 eventArgObjectForPool.UserToken = receiveSendToken;
 
@@ -115,7 +118,7 @@ namespace TcpFramework.Client
             threadClear.IsBackground = true;//进程结束则直接干掉本线程即可，无需等待!
             threadClear.Start();
 
-            threadSending = new Thread(new ThreadStart(SendMessageOverAndOver));
+            threadSending = new Thread(new ThreadStart(SendMessageOverAndOver));            
             threadSending.IsBackground = true;
             threadSending.Start();
 
@@ -123,6 +126,34 @@ namespace TcpFramework.Client
 
             LogManager.Log(string.Format("SocketClient Init by FirstInvoke Completed! ConsumeTime:{0} ms", sw.ElapsedMilliseconds));
 
+        }
+
+        public static void SendRequest2(byte[] sendData, ref string message) {
+
+            int _tokenId = GetNewTokenId();
+
+            Message _message = new Message();
+            _message.TokenId = _tokenId;
+            _message.Content = sendData;
+            
+            //数据写入数据池
+            SendingMessages.Enqueue(_message);                       
+        }
+
+        private static byte[] Test(int tokenId) {
+
+            if (IsIOComplete(tokenId)) {
+
+
+
+            }
+                          
+            byte[] result;
+               
+            if (TryGetResult(tokenId, out result))                    
+                return result;
+            
+            return null;
         }
 
         //唯一对外发送接口，在相关场景中，该方法的调用方应该考虑使用线程池或Task来控制并发量！
@@ -142,6 +173,7 @@ namespace TcpFramework.Client
 
             byte[] retData;
             bool isTimeOut = false;
+            int loopcount = 0;
 
             //wait result...
             while (!IsIOComplete(_tokenId))
@@ -153,13 +185,21 @@ namespace TcpFramework.Client
                     break;
                 }
 
-                //貌似更有效率！得益于2003server后的win api sleep版本修改
-                Thread.Sleep(0);
+                loopcount++;
+                Thread.Sleep(1);
             }
 
             if (isTimeOut)
             {
                 message = string.Format("Try get retdata timeout on MsgTokenId:{0}! consumetime:{1} ms", _tokenId, sw.ElapsedMilliseconds);
+
+                bool temp = TryGetResult(_tokenId, out retData);
+
+                if (temp)
+                    LogManager.Log("shitok:"+Encoding.UTF8.GetString(retData,8,retData.Length-8)+" loopcount:"+loopcount.ToString());
+                else
+                    LogManager.Log("shitfail");
+
                 return null;
             }
 
@@ -217,7 +257,7 @@ namespace TcpFramework.Client
                         if (listSend.Count > 0)
                         {                          
                             if (listSend.Count >= clientSetting.numberOfMessagesPerConnection)
-                            {
+                            {                               
                                 processor.SendMessage(listSend, clientSetting.serverEndPoint);
                                 listSend = new List<Message>();
                             }
@@ -228,7 +268,7 @@ namespace TcpFramework.Client
 
                     //确保长连接多发时，不会因为小于多发的数量而此时队列没数据了导致的发送丢失
                     if (listSend.Count > 0)
-                    {
+                    {                        
                         processor.SendMessage(listSend, clientSetting.serverEndPoint);
                         listSend = new List<Message>();
                     }
@@ -243,7 +283,7 @@ namespace TcpFramework.Client
                     LogManager.Log("SendMessageOverAndOver occur Error!", otherError);
                 }
 
-                Thread.Sleep(0);
+                Thread.Sleep(1);
             }
         }
 
@@ -252,19 +292,15 @@ namespace TcpFramework.Client
             byte[] copyData = new byte[retData.Length];
 
             if (retData.Length > 0)
-                Buffer.BlockCopy(retData, 0, copyData, 0, retData.Length);
-
-            arrTokenId[tokenId] = true;
+                Buffer.BlockCopy(retData, 0, copyData, 0, retData.Length);            
 
             bool addRet = dictResult.TryAdd(tokenId, copyData);
             if (!addRet)
-            {
-                //再试一次
-                addRet = dictResult.TryAdd(tokenId, copyData);
-
-                if(!addRet)
-                    LogManager.Log(string.Empty, new Exception(string.Format("TryAdd retData[{0} byte] Failed on MsgTokenId:{1}", copyData.Length, tokenId)));
+            {                                    
+                LogManager.Log(string.Empty, new Exception(string.Format("TryAdd retData[{0} byte] Failed on MsgTokenId:{1}", copyData.Length, tokenId)));                
             }
+                            
+            arrTokenId[tokenId] = true;
 
             return addRet;
         }

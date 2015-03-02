@@ -3,4 +3,4 @@ connectsocket_count:30
 datasocket_count:100
 buffersize:1024
 sendcountperconnect:1
-timeoutbyms(ms):10000
+timeoutbyms(ms):1000

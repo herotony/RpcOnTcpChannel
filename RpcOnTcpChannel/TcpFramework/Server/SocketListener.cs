@@ -213,7 +213,7 @@ namespace TcpFramework.Server
             }           
 
             if (receiveSendEventArgs.BytesTransferred == 0)
-            {
+            {                
                 receiveSendToken.Reset();
                 CloseClientSocket(receiveSendEventArgs);
 
@@ -229,7 +229,7 @@ namespace TcpFramework.Server
                 if (remainingBytesToProcess == 0)
                 {
                     // We need to do another receive op, since we do not have
-                    // the message yet, but remainingBytesToProcess == 0.
+                    // the message yet, but remainingBytesToProcess == 0.                    
                     StartReceive(receiveSendEventArgs);
 
                     return;
@@ -245,21 +245,23 @@ namespace TcpFramework.Server
 
                     MessagePreparer.GetDataToSend(receiveSendEventArgs, processResult);
 
-                    StartSend(receiveSendEventArgs);
-
+                    //开始下次接收
+                    receiveSendToken.CreateNewServerSession(receiveSendEventArgs);
                     receiveSendToken.dataMessageReceived = null;
                     receiveSendToken.Reset();
 
+                    //调整了Reset位置到此语句前面执行，这样确保一个连接多次发送不会出问题了
+                    StartSend(receiveSendEventArgs);                  
                 }
                 else
-                {
+                {                    
                     receiveSendToken.Reset();
                     CloseClientSocket(receiveSendEventArgs);
                     return;
                 }
             }
             else
-            {
+            {                
                 receiveSendToken.receiveMessageOffset = receiveSendToken.bufferOffsetReceive;
                 receiveSendToken.recPrefixBytesDoneThisOp = 0;
 
@@ -277,9 +279,7 @@ namespace TcpFramework.Server
             if (!willRaiseEvent)
             {
                 ProcessReceive(receiveSendEventArgs);
-            }
-
-            LogManager.Log(string.Format("receive on {0} with {1}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint, willRaiseEvent));
+            }            
         }
 
         private void StartSend(SocketAsyncEventArgs receiveSendEventArgs)
@@ -320,7 +320,7 @@ namespace TcpFramework.Server
                 if (receiveSendToken.sendBytesRemainingCount == 0)
                 {
                     // If we are within this if-statement, then all the bytes in
-                    // the message have been sent. 
+                    // the message have been sent.                     
                     StartReceive(receiveSendEventArgs);
                 }
                 else

@@ -168,7 +168,9 @@ namespace TcpFramework.Client
             {                
                 //将数据写入缓存字典中
                 if (ReceiveDataCompleteCallback != null)
-                    ReceiveDataCompleteCallback(receiveSendToken.messageTokenId,receiveSendToken.dataMessageReceived);
+                {                    
+                    ReceiveDataCompleteCallback(receiveSendToken.messageTokenId, receiveSendToken.dataMessageReceived);
+                }
                
                 receiveSendToken.Reset();
 
@@ -176,13 +178,14 @@ namespace TcpFramework.Client
                 //这里是等待回传数据后，开始下次发送前的判断，直至将List<Message>全部发送完毕为止，
                 //List<Message>中的数量由调用方控制
                 if (receiveSendToken.sendDataHolder.ArrayOfMessageToSend.Count > receiveSendToken.sendDataHolder.NumberOfMessageHadSent)
-                {
+                {                    
                     MessagePreparer.GetDataToSend(receiveSendEventArgs);
                     StartSend(receiveSendEventArgs);
                 }
                 else
-                {
+                {                    
                     receiveSendToken.sendDataHolder.ArrayOfMessageToSend = null;
+                    //disconnect中会重新new一个senddataholder，numberofmessagehadsent即清零
                     StartDisconnect(receiveSendEventArgs);
                 }                
             }
@@ -348,16 +351,16 @@ namespace TcpFramework.Client
                 {
                     CloseSocket(connectEventArgs.AcceptSocket);
                 }               
-
-                //it is time to release connectEventArgs object back to the pool.
-                poolOfConnectEventArgs.Push(connectEventArgs);
-
+                
                 //返回null数据
                 if (ReceiveDataCompleteCallback != null)
                 {
                     for (int i = 0; i < theConnectingToken.ArrayOfMessageReadyToSend.Count; i++)
                         ReceiveDataCompleteCallback(theConnectingToken.ArrayOfMessageReadyToSend[i].TokenId, null);
                 }
+
+                //it is time to release connectEventArgs object back to the pool.
+                poolOfConnectEventArgs.Push(connectEventArgs);
 
             }
             catch (Exception closeErr)

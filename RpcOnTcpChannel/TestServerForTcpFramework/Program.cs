@@ -24,7 +24,7 @@ namespace TestServerForTcpFramework
 
             string inputdata = Encoding.UTF8.GetString(input);
 
-            log.Info(inputdata);
+            //log.Info(inputdata);
 
             string result = string.Format("date:{0} - {1}", DateTime.Now, inputdata);
 
