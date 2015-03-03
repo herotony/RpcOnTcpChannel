@@ -72,7 +72,7 @@ namespace TcpFramework.Common
 
         internal static ClientSetting GetClientSetting() {
 
-            int shouldBingoCount = 6;
+            int shouldBingoCount = 5;
             int actualBingoCount = 0;
 
             Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting();
@@ -122,20 +122,12 @@ namespace TcpFramework.Common
                         return null;
 
                     actualBingoCount++;
-                }
-                else if (lowerKey.StartsWith("sendcountperconnect"))
-                {
-                    if (!int.TryParse(value, out numberSendCountPerConnection))
-                        return null;
-
-                    actualBingoCount++;
-                }
+                }               
 
             }
 
             if (actualBingoCount.Equals(shouldBingoCount))
             {
-
                 return new ClientSetting(IPInfo, numberSendCountPerConnection, maxConnectSocketCount,
                     maxDataSocketCount, bufferSize, receivePrefixLength, sendPrefixLength, opsToPreAllocate, timeOutByMS);
             }

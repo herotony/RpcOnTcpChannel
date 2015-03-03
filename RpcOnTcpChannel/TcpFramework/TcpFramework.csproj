@@ -49,6 +49,7 @@
     <Compile Include="Client\ConnectOpUserToken.cs" />
     <Compile Include="Client\Message.cs" />
     <Compile Include="Client\MessagePreparer.cs" />
+    <Compile Include="Client\ReceiveFeedbackDataCompleteEventArg.cs" />
     <Compile Include="Client\SendDataHolder.cs" />
     <Compile Include="Common\BufferManager.cs" />
     <Compile Include="Common\DataUserToken.cs" />

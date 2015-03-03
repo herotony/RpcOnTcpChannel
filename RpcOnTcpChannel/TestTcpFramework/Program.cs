@@ -19,7 +19,7 @@ namespace TestTcpFramework
         {
             string message = string.Empty;
 
-            int testCount = 1000;
+            int testCount = 10000;
             int faileCount = 0;
             int successCount = 0;
             Task[] tasks = new Task[testCount];
@@ -32,7 +32,11 @@ namespace TestTcpFramework
 
                 tasks[i] = Task.Factory.StartNew(() => {
 
-                    byte[] result = ClientSocketManager.SendRequest(Encoding.UTF8.GetBytes(string.Format("秦琼战关公! on id:{0}",rnd.Next(10000))), ref message);
+                    Stopwatch _sw = new Stopwatch();
+                    _sw.Start();
+                    //byte[] result = ClientSocketManager.SendRequest(Encoding.UTF8.GetBytes(string.Format("秦琼战关公! on id:{0}",rnd.Next(10000))), ref message);
+                    ClientSocketManager smgr = new ClientSocketManager();
+                    byte[] result = smgr.SendRequest(Encoding.UTF8.GetBytes(string.Format("秦琼战关公! on id:{0}", rnd.Next(10000))), ref message);
 
                     if (result == null)
                     {
@@ -46,7 +50,12 @@ namespace TestTcpFramework
                         int sid = BitConverter.ToInt32(result, 4);
                         string feedback = Encoding.UTF8.GetString(result, 8, result.Length - 8);
 
-                        //log.Info(string.Format("tid:{0} in sid:{1} with cnt:{2}", tranId, sid, feedback));
+                        _sw.Stop();
+
+                        if (_sw.ElapsedMilliseconds > 6)
+                            log.Error("long time:" + _sw.ElapsedMilliseconds.ToString());
+                        //log.Info(message);
+                        //log.Info(string.Format("tid:{0} in sid:{1} with cnt:{2} consumetime:{3} ms", tranId, sid, feedback,_sw.ElapsedMilliseconds));
                     }
 
                 });

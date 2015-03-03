@@ -8,37 +8,17 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Diagnostics;
 
-
 using TcpFramework.Common;
 
 namespace TcpFramework.Client
 {
     public class ClientSocketManager
-    {
-        //缓存返回数据
-        private static ConcurrentDictionary<int, byte[]> dictResult = new ConcurrentDictionary<int, byte[]>();
-
-        //关键是为了记录发送到返回的起始时间点，便于查看耗时
-        private static ConcurrentQueue<Message> SendingMessages = new ConcurrentQueue<Message>();
-
-        //相当于83886080 个请求，10兆空间处理8千万请求/天，不是并发哦，是一天一个前端的累计访问量
-        private static BitArray arrTokenId = new BitArray(new byte[10 * 1024 * 1024]);
-
+    {              
         private static int msgTokenId = 0;
-        private static int timeOutByMS = 1000;//超时设置，单位毫秒
-
-        //定时清理参数
-        private static int ClearTime = 3;
-        private static bool IsAlreadyClear = false;
-        //查询并发
-        private static int concurrentCount = 0;
+        private static int timeOutByMS = 1000;//超时设置，单位毫秒        
 
         //核心部分！
-        private static BufferManager bufferManager;
-
-        //开启两个线程，一个负责清零，一个负责发送
-        private static Thread threadClear;
-        private static Thread threadSending;
+        private static BufferManager bufferManager;       
 
         //最终要修改为读取配置
         private static ClientSetting clientSetting;
@@ -109,18 +89,7 @@ namespace TcpFramework.Client
                 eventArgObjectForPool.UserToken = receiveSendToken;
 
                 poolOfRecSendEventArgs.Push(eventArgObjectForPool);
-            }
-
-            //接收返回结果
-            processor.ReceiveDataCompleteCallback = TryAdd;
-
-            threadClear = new Thread(new ThreadStart(RunClear));
-            threadClear.IsBackground = true;//进程结束则直接干掉本线程即可，无需等待!
-            threadClear.Start();
-
-            threadSending = new Thread(new ThreadStart(SendMessageOverAndOver));            
-            threadSending.IsBackground = true;
-            threadSending.Start();
+            }                      
 
             sw.Stop();
 
@@ -128,244 +97,54 @@ namespace TcpFramework.Client
 
         }
 
-        public static void SendRequest2(byte[] sendData, ref string message) {
+        private int messageTokenId = 0;        
+        private byte[] result = null;        
+        private ManualResetEvent manualResetEvent = new ManualResetEvent(false);
 
-            int _tokenId = GetNewTokenId();
+        public byte[] SendRequest(byte[] sendData, ref string message) {
+            
+            int _tokenId = GetNewTokenId();            
 
             Message _message = new Message();
             _message.TokenId = _tokenId;
             _message.Content = sendData;
-            
-            //数据写入数据池
-            SendingMessages.Enqueue(_message);                       
-        }
+            this.messageTokenId = _tokenId;
 
-        private static byte[] Test(int tokenId) {
+            processor.ReceiveFeedbackDataComplete += new EventHandler<ReceiveFeedbackDataCompleteEventArg>(Processor_ReceiveFeedbackDataComplete);                                   
 
-            if (IsIOComplete(tokenId)) {
+            List<Message> list = new List<Message>();
+            list.Add(_message);
+            processor.SendMessage(list, clientSetting.serverEndPoint);
 
-
-
-            }
-                          
-            byte[] result;
-               
-            if (TryGetResult(tokenId, out result))                    
+            if (manualResetEvent.WaitOne(timeOutByMS))
+            {
+                message = "ok";
                 return result;
-            
+            }
+
+            message = "timeout";
+
             return null;
         }
+        
 
-        //唯一对外发送接口，在相关场景中，该方法的调用方应该考虑使用线程池或Task来控制并发量！
-        public static byte[] SendRequest(byte[] sendData, ref string message)
-        {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+        private void Processor_ReceiveFeedbackDataComplete(object sender, ReceiveFeedbackDataCompleteEventArg e) {
 
-            int _tokenId = GetNewTokenId();
+            if (!e.MessageTokenId.Equals(this.messageTokenId))
+                return;
 
-            Message _message = new Message();
-            _message.TokenId = _tokenId;
-            _message.Content = sendData;
+            if (e.FeedbackData != null && e.FeedbackData.Length > 0) {
 
-            //数据写入数据池
-            SendingMessages.Enqueue(_message);
-
-            byte[] retData;
-            bool isTimeOut = false;
-            int loopcount = 0;
-
-            //wait result...
-            while (!IsIOComplete(_tokenId))
-            {
-                if (sw.ElapsedMilliseconds > timeOutByMS)
-                {
-                    sw.Stop();
-                    isTimeOut = true;
-                    break;
-                }
-
-                loopcount++;
-                Thread.Sleep(1);
+                result = new byte[e.FeedbackData.Length];
+                Buffer.BlockCopy(e.FeedbackData, 0, result, 0, e.FeedbackData.Length);
             }
 
-            if (isTimeOut)
-            {
-                message = string.Format("Try get retdata timeout on MsgTokenId:{0}! consumetime:{1} ms", _tokenId, sw.ElapsedMilliseconds);
+            manualResetEvent.Set();                   
+        }                   
 
-                bool temp = TryGetResult(_tokenId, out retData);
-
-                if (temp)
-                    LogManager.Log("shitok:"+Encoding.UTF8.GetString(retData,8,retData.Length-8)+" loopcount:"+loopcount.ToString());
-                else
-                    LogManager.Log("shitfail");
-
-                return null;
-            }
-
-            bool getResult = TryGetResult(_tokenId, out retData);
-
-            sw.Stop();
-
-            if (!getResult)
-                message = string.Format("Try get retdata from dictionary failed on MsgTokenId:{0}! consumetime:{1} ms", _tokenId, sw.ElapsedMilliseconds);
-            else
-                message = string.Format("get retdata sucessfully! MsgTokenId:{0} reddata length:{1} consumetime:{2} ms", _tokenId, retData.Length, sw.ElapsedMilliseconds);
-
-            return retData;
-        }
-
-        //循环发送线程方法
-        private static void SendMessageOverAndOver()
-        {
-            List<Message> listSend = new List<Message>();
-
-            bool dequeueOk = false;
-
-            Message firstMsg = null;
-            Message msg = null;
-
-            while (true)
-            {
-                try
-                {                   
-                    bool isFirstInPerLoop = true;
-
-                    dequeueOk = SendingMessages.TryDequeue(out firstMsg);
-
-                    while (dequeueOk)
-                    {
-                        if (isFirstInPerLoop && firstMsg != null)
-                        {
-                            isFirstInPerLoop = false;
-                            firstMsg.StartTime = DateTime.Now;
-
-                            //待转交saea
-                            listSend.Add(firstMsg);
-                        }
-                        else
-                        {
-                            if (msg != null)
-                            {
-                                msg.StartTime = DateTime.Now;
-
-                                //待转交saea
-                                listSend.Add(msg);
-                            }
-                        }
-
-                        if (listSend.Count > 0)
-                        {                          
-                            if (listSend.Count >= clientSetting.numberOfMessagesPerConnection)
-                            {                               
-                                processor.SendMessage(listSend, clientSetting.serverEndPoint);
-                                listSend = new List<Message>();
-                            }
-                        }
-
-                        dequeueOk = SendingMessages.TryDequeue(out msg);
-                    }
-
-                    //确保长连接多发时，不会因为小于多发的数量而此时队列没数据了导致的发送丢失
-                    if (listSend.Count > 0)
-                    {                        
-                        processor.SendMessage(listSend, clientSetting.serverEndPoint);
-                        listSend = new List<Message>();
-                    }
-
-                }
-                catch (InvalidOperationException e)
-                {
-                    LogManager.Log(string.Format("SendingMessages queue maybe empty(count:{0})", SendingMessages.Count), e);
-                }
-                catch (Exception otherError)
-                {
-                    LogManager.Log("SendMessageOverAndOver occur Error!", otherError);
-                }
-
-                Thread.Sleep(1);
-            }
-        }
-
-        internal static bool TryAdd(int tokenId, byte[] retData)
-        {
-            byte[] copyData = new byte[retData.Length];
-
-            if (retData.Length > 0)
-                Buffer.BlockCopy(retData, 0, copyData, 0, retData.Length);            
-
-            bool addRet = dictResult.TryAdd(tokenId, copyData);
-            if (!addRet)
-            {                                    
-                LogManager.Log(string.Empty, new Exception(string.Format("TryAdd retData[{0} byte] Failed on MsgTokenId:{1}", copyData.Length, tokenId)));                
-            }
-                            
-            arrTokenId[tokenId] = true;
-
-            return addRet;
-        }
-
-        private static bool TryGetResult(int tokenId, out byte[] retData)
-        {
-            bool tryRemove = dictResult.TryRemove(tokenId, out retData);
-
-            if (!tryRemove)
-            {
-                //留日志即可...
-                LogManager.Log(string.Format("TryRemove MsgTokenId:{0} failed!", tokenId));
-            }
-
-            return retData != null && retData.Length > 0;
-        }
-
-        private static bool IsIOComplete(int tokenId)
-        {
-            return arrTokenId[tokenId];
-        }
-
-        internal static int GetNewTokenId()
+        private static int GetNewTokenId()
         {
             return Interlocked.Increment(ref msgTokenId);
-        }
-
-        //凌晨清零!
-        private static void RunClear()
-        {
-            int retryCount = 0;
-
-            while (true)
-            {
-                if (IsAlreadyClear)
-                {
-                    if (!DateTime.Now.Hour.Equals(ClearTime))
-                        IsAlreadyClear = false;
-                }
-
-                if (!IsAlreadyClear && DateTime.Now.Hour.Equals(ClearTime))
-                {
-                    if (concurrentCount < 3 || retryCount > 10)
-                    {
-                        //清理							
-                        ClearAllTokenId();
-                        IsAlreadyClear = true;
-                        retryCount = 0;
-                    }
-                    else
-                        retryCount++;
-                }
-
-                Thread.Sleep(10000);
-            }
-        }
-
-        //用于凌晨某时刻清零...
-        private static void ClearAllTokenId()
-        {
-            msgTokenId = 0;
-            arrTokenId.SetAll(false);
-            dictResult.Clear();
-
-            LogManager.Log("ClearAllTokenId Complete Successfully!");
-        }
+        }       
     }
 }

@@ -11,10 +11,9 @@ using TcpFramework.Common;
 namespace TcpFramework.Client
 {
     internal class ClientSocketProcessor
-    {
-        internal delegate bool ReceiveDataComplete(int messageTokenId,byte[] receiveData);
-        internal ReceiveDataComplete ReceiveDataCompleteCallback;
-
+    {        
+        public event EventHandler<ReceiveFeedbackDataCompleteEventArg> ReceiveFeedbackDataComplete;
+        
         #region 统计数据
 
         //运行以来的最大并发值
@@ -106,9 +105,9 @@ namespace TcpFramework.Client
                 default:
                     {
                         ClientUserToken receiveSendToken = (ClientUserToken)e.UserToken;
-                        if (ReceiveDataCompleteCallback != null)
+                        if (ReceiveFeedbackDataComplete != null)
                         {
-                            ReceiveDataCompleteCallback(receiveSendToken.messageTokenId, null);
+                            ReceiveFeedbackDataComplete(receiveSendToken.messageTokenId, null);
                         }
 
                         this.maxConcurrentConnection.Release();
@@ -167,9 +166,13 @@ namespace TcpFramework.Client
             if (incomingTcpMessageIsReady == true)
             {                
                 //将数据写入缓存字典中
-                if (ReceiveDataCompleteCallback != null)
-                {                    
-                    ReceiveDataCompleteCallback(receiveSendToken.messageTokenId, receiveSendToken.dataMessageReceived);
+                if (ReceiveFeedbackDataComplete != null)
+                {
+                    ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
+                    arg.MessageTokenId = receiveSendToken.messageTokenId;
+                    arg.FeedbackData = receiveSendToken.dataMessageReceived;
+
+                    ReceiveFeedbackDataComplete(this, arg);
                 }
                
                 receiveSendToken.Reset();
@@ -246,10 +249,14 @@ namespace TcpFramework.Client
 
                 // We'll just close the socket if there was a
                 // socket error when receiving data from the client.
-                if (ReceiveDataCompleteCallback != null)
-                {                    
-                    ReceiveDataCompleteCallback(receiveSendToken.messageTokenId,null);
-                }               
+                if (ReceiveFeedbackDataComplete != null)
+                {
+                    ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
+                    arg.MessageTokenId = receiveSendToken.messageTokenId;
+                    arg.FeedbackData = null;
+
+                    ReceiveFeedbackDataComplete(this, arg);
+                }            
             }
         }   
 
@@ -353,10 +360,16 @@ namespace TcpFramework.Client
                 }               
                 
                 //返回null数据
-                if (ReceiveDataCompleteCallback != null)
-                {
-                    for (int i = 0; i < theConnectingToken.ArrayOfMessageReadyToSend.Count; i++)
-                        ReceiveDataCompleteCallback(theConnectingToken.ArrayOfMessageReadyToSend[i].TokenId, null);
+                if (ReceiveFeedbackDataComplete != null)
+                {                                                                   
+                    for (int i = 0; i < theConnectingToken.ArrayOfMessageReadyToSend.Count; i++)                        
+                    {                            
+                        ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();                            
+                        arg.MessageTokenId = theConnectingToken.ArrayOfMessageReadyToSend[i].TokenId;                            
+                        arg.FeedbackData = null;
+                            
+                        ReceiveFeedbackDataComplete(this, arg);                                                 
+                    }
                 }
 
                 //it is time to release connectEventArgs object back to the pool.
