@@ -1,0 +1,7 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\bin\Release\TestSharpRpcSample.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\bin\Release\TestSharpRpcSample.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\bin\Release\IProcessGoodDetail.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\bin\Release\IProcessGoodDetail.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\obj\Release\TestSharpRpcSample.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\obj\Release\TestSharpRpcSample.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcSample\obj\Release\TestSharpRpcSample.pdb

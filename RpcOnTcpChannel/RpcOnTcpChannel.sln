@@ -1,13 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcFramework", "RpcFramework\RpcFramework.csproj", "{676B0858-295B-49EA-BE10-9237538AE947}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpFramework", "TcpFramework\TcpFramework.csproj", "{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClientForTcpFramework", "TestTcpFramework\TestClientForTcpFramework.csproj", "{7395B813-BD36-45BC-BB55-6D707DA53567}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServerForTcpFramework", "TestServerForTcpFramework\TestServerForTcpFramework.csproj", "{93100866-EBE3-4C00-BC48-3940938320D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpRpc", "SharpRpc\SharpRpc.csproj", "{2C63C96E-39CB-4812-A105-866BBEA4D6B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSharpRpcClient", "TestSharpRpcClient\TestSharpRpcClient.csproj", "{691FA565-513C-419C-B980-C8ED262F1163}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSharpRpcServer", "TestSharpRpcServer\TestSharpRpcServer.csproj", "{CF167764-6D7A-469E-9355-303D6C48056F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IProcessGoodDetail", "IProcessGoodDetail\IProcessGoodDetail.csproj", "{4E5E46BB-3F84-4C14-8C59-F8B6E374C5B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSharpRpcSample", "TestSharpRpcSample\TestSharpRpcSample.csproj", "{74A7F53E-DA56-481C-B32F-8F12F891848D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{676B0858-295B-49EA-BE10-9237538AE947}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{676B0858-295B-49EA-BE10-9237538AE947}.Debug|Any CPU.Build.0 = Release|Any CPU
-		{676B0858-295B-49EA-BE10-9237538AE947}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{676B0858-295B-49EA-BE10-9237538AE947}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}.Debug|Any CPU.ActiveCfg = Release|Any CPU
 		{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{DD8E417F-2DB1-4A79-B2DD-035BADA6F8CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -31,6 +35,26 @@ Global
 		{93100866-EBE3-4C00-BC48-3940938320D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93100866-EBE3-4C00-BC48-3940938320D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93100866-EBE3-4C00-BC48-3940938320D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C63C96E-39CB-4812-A105-866BBEA4D6B3}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{2C63C96E-39CB-4812-A105-866BBEA4D6B3}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{2C63C96E-39CB-4812-A105-866BBEA4D6B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C63C96E-39CB-4812-A105-866BBEA4D6B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{691FA565-513C-419C-B980-C8ED262F1163}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{691FA565-513C-419C-B980-C8ED262F1163}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{691FA565-513C-419C-B980-C8ED262F1163}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{691FA565-513C-419C-B980-C8ED262F1163}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF167764-6D7A-469E-9355-303D6C48056F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF167764-6D7A-469E-9355-303D6C48056F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF167764-6D7A-469E-9355-303D6C48056F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF167764-6D7A-469E-9355-303D6C48056F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E5E46BB-3F84-4C14-8C59-F8B6E374C5B4}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{4E5E46BB-3F84-4C14-8C59-F8B6E374C5B4}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{4E5E46BB-3F84-4C14-8C59-F8B6E374C5B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E5E46BB-3F84-4C14-8C59-F8B6E374C5B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74A7F53E-DA56-481C-B32F-8F12F891848D}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{74A7F53E-DA56-481C-B32F-8F12F891848D}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{74A7F53E-DA56-481C-B32F-8F12F891848D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74A7F53E-DA56-481C-B32F-8F12F891848D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

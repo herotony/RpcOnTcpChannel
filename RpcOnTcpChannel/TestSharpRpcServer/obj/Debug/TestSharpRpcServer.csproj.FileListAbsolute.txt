@@ -1,0 +1,11 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\TestSharpRpcServer.exe.config
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\TestSharpRpcServer.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\TestSharpRpcServer.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\SharpRpc.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\TcpFramework.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\log4net.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\SharpRpc.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\bin\Debug\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\obj\Debug\TestSharpRpcServer.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\obj\Debug\TestSharpRpcServer.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcServer\obj\Debug\TestSharpRpcServer.pdb

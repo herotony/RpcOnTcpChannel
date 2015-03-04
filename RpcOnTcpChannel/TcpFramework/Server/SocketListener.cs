@@ -369,5 +369,18 @@ namespace TcpFramework.Server
             this.maxConcurrentConnection.Release();
         }
 
+        public void Stop() {
+
+            try {
+
+                listenSocket.Close();
+                listenSocket = null;
+
+                bufferManager = null;
+                poolOfAcceptEventArgs = null;
+                poolOfRecSendEventArgs = null;
+            }
+            catch { }            
+        }
     }
 }

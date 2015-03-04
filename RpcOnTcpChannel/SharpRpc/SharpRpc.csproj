@@ -1,0 +1,250 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2C63C96E-39CB-4812-A105-866BBEA4D6B3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SharpRpc</RootNamespace>
+    <AssemblyName>SharpRpc</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\Build\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ClientSide\IOutgoingRequestProcessor.cs" />
+    <Compile Include="ClientSide\IRequestSenderContainer.cs" />
+    <Compile Include="ClientSide\Proxy\IProxyContainer.cs" />
+    <Compile Include="ClientSide\Proxy\IProxyFactory.cs" />
+    <Compile Include="ClientSide\OutgoingRequestProcessor.cs" />
+    <Compile Include="ClientSide\OutgoingRequestProcessorMethods.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyKey.cs" />
+    <Compile Include="ClientSide\RequestSenderContainer.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyClassBuildingContext.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyClassFieldCache.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyContainer.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyFactory.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyMethodEmittingContext.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyMethodGenericArgumentCodec.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyMethodParameterCodec.cs" />
+    <Compile Include="ClientSide\Proxy\ProxyMethodRetvalCodec.cs" />
+    <Compile Include="ClientSide\TcpRequestSender.cs" />
+    <Compile Include="Codecs\AbstractManualCodecWrapper.cs" />
+    <Compile Include="Codecs\ClassArrayCodec.cs" />
+    <Compile Include="Codecs\CodecContainer.cs" />
+    <Compile Include="Codecs\CodecContainerMethods.cs" />
+    <Compile Include="Codecs\CollectionCodec.cs" />
+    <Compile Include="Codecs\CollectionCodecBase.cs" />
+    <Compile Include="Codecs\DynamicCodec.cs" />
+    <Compile Include="Codecs\Expressions\BlockExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\IndexExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\NewArrayInitExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\ElementInitCodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberAssignmentCodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberBindingCollectionCodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberBindingCodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberInitExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberListBindingCodec.cs" />
+    <Compile Include="Codecs\Expressions\MemberMemberBindingCodec.cs" />
+    <Compile Include="Codecs\Expressions\NewArrayBoundsExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\TypeEqualExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\TypeIsExpressionSubcodec.cs" />
+    <Compile Include="Codecs\ReflectionTypes\ConstructorInfoCodec.cs" />
+    <Compile Include="Codecs\Expressions\BinaryExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\ConditionalExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\InvocationExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\ListInitExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\MethodCallExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\ConstantExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\ExpressionCodec.cs" />
+    <Compile Include="Codecs\Expressions\ExpressionSubcodecBase.cs" />
+    <Compile Include="Codecs\Expressions\IExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\LambdaExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\NewExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\ParameterExpressionSubcodec.cs" />
+    <Compile Include="Codecs\Expressions\UnaryExpressionSubcodec.cs" />
+    <Compile Include="Codecs\ReflectionTypes\EventInfoCodec.cs" />
+    <Compile Include="Codecs\ReflectionTypes\FieldInfoCodec.cs" />
+    <Compile Include="Codecs\FuncMethods.cs" />
+    <Compile Include="Codecs\IndirectCodec.cs" />
+    <Compile Include="Codecs\Loaders.cs" />
+    <Compile Include="Codecs\ManualCodecMethods.cs" />
+    <Compile Include="Codecs\ReflectionTypes\MemberInfoCodec.cs" />
+    <Compile Include="Codecs\ReflectionTypes\MemberInfoCodecBase.cs" />
+    <Compile Include="Codecs\ReflectionTypes\MethodInfoCodec.cs" />
+    <Compile Include="Codecs\ReflectionTypes\MethodBaseCodecBase.cs" />
+    <Compile Include="Codecs\ReflectionTypes\PropertyInfoCodec.cs" />
+    <Compile Include="Codecs\TaskMethods.cs" />
+    <Compile Include="Codecs\TypeMethods.cs" />
+    <Compile Include="ServerSide\Handler\HandlerClassBuildingContext.cs" />
+    <Compile Include="ServerSide\Handler\HandlerClassFieldCache.cs" />
+    <Compile Include="ServerSide\Handler\HandlerParameterCodec.cs" />
+    <Compile Include="ServerSide\Handler\HandlerRetvalCodec.cs" />
+    <Compile Include="ServerSide\Handler\HandlerMethodEmittingContext.cs" />
+    <Compile Include="ServerSide\TcpRequestReceiver.cs" />
+    <Compile Include="Utility\IForLoopEmitter.cs" />
+    <Compile Include="Codecs\EmittingContextExtensions.cs" />
+    <Compile Include="Utility\ForeachLoopEmitter.cs" />
+    <Compile Include="Utility\ForLoopEmitter.cs" />
+    <Compile Include="Utility\IForeachLoopEmitter.cs" />
+    <Compile Include="Codecs\ManualCodecEmittingContext.cs" />
+    <Compile Include="Codecs\StringCodecBase.cs" />
+    <Compile Include="Codecs\ReflectionTypes\TypeCodec.cs" />
+    <Compile Include="Reflection\DynamicMethodPointerExtractor.cs" />
+    <Compile Include="Reflection\GenericParameterDescription.cs" />
+    <Compile Include="Reflection\MethodRemotingType.cs" />
+    <Compile Include="Reflection\ServiceDescriptionExtensions.cs" />
+    <Compile Include="RpcClientExtensions.cs" />
+    <Compile Include="ServerSide\Handler\GenericHandler.cs" />
+    <Compile Include="ServerSide\Handler\IHandler.cs" />
+    <Compile Include="ServerSide\Handler\IHandlerFactory.cs" />
+    <Compile Include="ServerSide\Handler\HandlerFactory.cs" />
+    <Compile Include="ServerSide\TypesKey.cs" />
+    <Compile Include="ServiceNotReadyException.cs" />
+    <Compile Include="ServiceTimeoutException.cs" />
+    <Compile Include="TimeoutSettings.cs" />
+    <Compile Include="Utility\MyILGenerator.cs" />
+    <Compile Include="Utility\NativeStructHelper.cs" />
+    <Compile Include="Codecs\ReferenceArrayCodecBase.cs" />
+    <Compile Include="Codecs\DataContractCodec.cs" />
+    <Compile Include="Codecs\FieldsCodec.cs" />
+    <Compile Include="Codecs\EmittingCodecExtensions.cs" />
+    <Compile Include="Codecs\ArrayExtensions.cs" />
+    <Compile Include="Codecs\ExceptionCodec.cs" />
+    <Compile Include="Codecs\ICodec.cs" />
+    <Compile Include="Codecs\IEmittingCodec.cs" />
+    <Compile Include="Codecs\ICodecContainer.cs" />
+    <Compile Include="Codecs\IEmittingContext.cs" />
+    <Compile Include="Codecs\IManualCodec.cs" />
+    <Compile Include="Codecs\IMethodBasedManualCodec.cs" />
+    <Compile Include="Codecs\EmittingContextBase.cs" />
+    <Compile Include="Codecs\ManualCodec.cs" />
+    <Compile Include="Codecs\ManualCodecBase.cs" />
+    <Compile Include="Codecs\ManualCodecExtensions.cs" />
+    <Compile Include="Codecs\NativeStructArrayCodec.cs" />
+    <Compile Include="Codecs\NativeStructCodec.cs" />
+    <Compile Include="Codecs\ReferenceStructArrayCodec.cs" />
+    <Compile Include="Codecs\StringCodec.cs" />
+    <Compile Include="Codecs\StructuralCodecBase.cs" />
+    <Compile Include="IRpcClientComponentContainer.cs" />
+    <Compile Include="IRpcClientServerComponentContainer.cs" />
+    <Compile Include="Logs\LogEntryType.cs" />
+    <Compile Include="Logs\LoggerExtensions.cs" />
+    <Compile Include="RpcClient.cs" />
+    <Compile Include="RpcClientComponentContainer.cs" />
+    <Compile Include="RpcClientComponentOverrides.cs" />
+    <Compile Include="ServerSide\IServiceImplementationFactory.cs" />
+    <Compile Include="ServerSide\ServiceImplementationFactory.cs" />
+    <Compile Include="Settings\HostSettingsParser.cs" />
+    <Compile Include="Topology\EndPointServiceTopology.cs" />
+    <Compile Include="Topology\ITopologyLoader.cs" />
+    <Compile Include="Topology\ITopologyParser.cs" />
+    <Compile Include="Settings\SettingsLoader.cs" />
+    <Compile Include="Topology\EvenlyDistributedServiceTopology.cs" />
+    <Compile Include="Settings\IHostSettingsParser.cs" />
+    <Compile Include="Logs\ILogger.cs" />
+    <Compile Include="Topology\IServiceTopology.cs" />
+    <Compile Include="Settings\ISettingsLoader.cs" />
+    <Compile Include="Topology\MapServiceTopology.cs" />
+    <Compile Include="Topology\RandomServiceTopology.cs" />
+    <Compile Include="RpcClientServerComponentContainer.cs" />
+    <Compile Include="RpcComponentOverrides.cs" />
+    <Compile Include="Settings\HostSettings.cs" />
+    <Compile Include="Reflection\TypeExtensions.cs" />
+    <Compile Include="ServerSide\InvalidImplementationException.cs" />
+    <Compile Include="ServerSide\IRequestReceiverContainer.cs" />
+    <Compile Include="ServerSide\Handler\IRawHandlerFactory.cs" />
+    <Compile Include="ServerSide\RequestReceiverContainer.cs" />
+    <Compile Include="ServerSide\Handler\RawHandlerFactory.cs" />
+    <Compile Include="Topology\SingleHostServiceTopology.cs" />
+    <Compile Include="Logs\ConsoleLogger.cs" />
+    <Compile Include="Topology\TopologyExtensions.cs" />
+    <Compile Include="Topology\TopologyLoader.cs" />
+    <Compile Include="Topology\TopologyParser.cs" />
+    <Compile Include="Utility\CommonImmutables.cs" />
+    <Compile Include="Settings\IHostSettings.cs" />
+    <Compile Include="Settings\InterfaceImplementationTypePair.cs" />
+    <Compile Include="IRpcClient.cs" />
+    <Compile Include="IRpcClientServer.cs" />
+    <Compile Include="RpcClientServer.cs" />
+    <Compile Include="ServerSide\InvalidPathException.cs" />
+    <Compile Include="ServerSide\ServiceNotFoundException.cs" />
+    <Compile Include="ServiceNetworkException.cs" />
+    <Compile Include="ServerSide\HttpRequestReceiver.cs" />
+    <Compile Include="ClientSide\HttpRequestSender.cs" />
+    <Compile Include="Interaction\ServicePath.cs" />
+    <Compile Include="ServerSide\Handler\IHandlerContainer.cs" />
+    <Compile Include="ServerSide\IRequestReceiver.cs" />
+    <Compile Include="ClientSide\IRequestSender.cs" />
+    <Compile Include="Interaction\Request.cs" />
+    <Compile Include="ServerSide\Handler\HandlerContainer.cs" />
+    <Compile Include="ServerSide\IncomingRequestProcessor.cs" />
+    <Compile Include="Interaction\Response.cs" />
+    <Compile Include="Interaction\ResponseStatus.cs" />
+    <Compile Include="Reflection\IServiceDescriptionBuilder.cs" />
+    <Compile Include="Reflection\IMethodDescriptionBuilder.cs" />
+    <Compile Include="Reflection\ServiceDescription.cs" />
+    <Compile Include="Reflection\ServiceDescriptionBuilder.cs" />
+    <Compile Include="Reflection\MethodDescription.cs" />
+    <Compile Include="Reflection\MethodDescriptionBuilder.cs" />
+    <Compile Include="Reflection\MethodParameterDescription.cs" />
+    <Compile Include="Reflection\MethodParameterWay.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerSide\IIncomingRequestProcessor.cs" />
+    <Compile Include="ServerSide\IServiceImplementationContainer.cs" />
+    <Compile Include="ServerSide\ServiceImplementationContainer.cs" />
+    <Compile Include="ServerSide\ServiceImplementationInfo.cs" />
+    <Compile Include="ServiceEndPoint.cs" />
+    <Compile Include="ServiceTopologyException.cs" />
+    <Compile Include="Utility\MethodHelpers.cs" />
+    <Compile Include="Utility\ScopeKey.cs" />
+    <Compile Include="Utility\StreamExtensions.cs" />
+    <Compile Include="Utility\ThreadGuard.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TcpFramework\TcpFramework.csproj">
+      <Project>{dd8e417f-2db1-4a79-b2dd-035bada6f8cf}</Project>
+      <Name>TcpFramework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

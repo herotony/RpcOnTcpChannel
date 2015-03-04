@@ -1,0 +1,1 @@
+GoodManager single tcp://localhost:7002

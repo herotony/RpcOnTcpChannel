@@ -1,0 +1,2 @@
+tcp://localhost:7002
+IProcessGoodDetail	IProcessGoodDetail.IGoodManager	TestSharpRpcSample	TestSharpRpcSample.GoodManager

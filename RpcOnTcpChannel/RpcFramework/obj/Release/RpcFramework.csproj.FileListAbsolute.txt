@@ -1,5 +1,0 @@
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\RpcFramework\bin\Release\RpcFramework.dll
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\RpcFramework\bin\Release\RpcFramework.pdb
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\RpcFramework\obj\Release\RpcFramework.dll
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\RpcFramework\obj\Release\RpcFramework.pdb
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\RpcFramework\obj\Release\RpcFramework.csprojResolveAssemblyReference.cache

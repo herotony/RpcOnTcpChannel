@@ -1,0 +1,15 @@
+D:\GitHubData\OriginalSharpRpc\SharpRPC-master\Build\Release\SharpRpc.dll
+D:\GitHubData\OriginalSharpRpc\SharpRPC-master\Build\Release\SharpRpc.pdb
+D:\GitHubData\OriginalSharpRpc\SharpRPC-master\Source\SharpRpc\obj\Release\SharpRpc.csprojResolveAssemblyReference.cache
+D:\GitHubData\OriginalSharpRpc\SharpRPC-master\Source\SharpRpc\obj\Release\SharpRpc.dll
+D:\GitHubData\OriginalSharpRpc\SharpRPC-master\Source\SharpRpc\obj\Release\SharpRpc.pdb
+D:\GitHubData\RpcOnTcpChannel\Build\Release\SharpRpc.dll
+D:\GitHubData\RpcOnTcpChannel\Build\Release\SharpRpc.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\obj\Release\SharpRpc.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\obj\Release\SharpRpc.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\Bin\Release\SharpRpc.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\Bin\Release\SharpRpc.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\Bin\Release\TcpFramework.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\Bin\Release\log4net.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\Bin\Release\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SharpRpc\obj\Release\SharpRpc.csprojResolveAssemblyReference.cache
