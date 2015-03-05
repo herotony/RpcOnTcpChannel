@@ -19,6 +19,8 @@ namespace TestSharpRpcSample
                 sbGoodIds.AppendFormat("{0},", goodId[i]);
             }
 
+            sbGoodIds.Append(DateTime.Now.Ticks.ToString());
+
             return string.Format("ret:ids({0} on city:{1} with coord:[lat:{2},lng{3}] rand:{4})", sbGoodIds.ToString(), cityName, lat, lng, new Random().Next(100000));
         }
 

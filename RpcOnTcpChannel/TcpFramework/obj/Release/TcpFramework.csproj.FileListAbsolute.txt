@@ -1,5 +1,5 @@
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Release\TcpFramework.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Release\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Release\log4net.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\obj\Release\TcpFramework.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\obj\Release\TcpFramework.pdb
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Release\log4net.dll

@@ -45,9 +45,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\IProcessGoodDetail\IProcessGoodDetail.csproj">
       <Project>{4e5e46bb-3f84-4c14-8c59-f8b6e374c5b4}</Project>
       <Name>IProcessGoodDetail</Name>

@@ -138,7 +138,8 @@ namespace SharpRpc.ServerSide
 
             listener = new HttpListener();
             listener.Prefixes.Add("http://*:" + port + "/");
-            listenerThread = new Thread(DoListen);
+            listenerThread = new Thread(new ThreadStart(DoListen));
+            listenerThread.IsBackground = true;
             listenerThread.Start();
         }
 
