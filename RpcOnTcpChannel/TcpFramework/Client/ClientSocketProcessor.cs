@@ -406,9 +406,14 @@ namespace TcpFramework.Client
 
         private void StartDisconnect(SocketAsyncEventArgs receiveSendEventArgs)
         {
-            Interlocked.Decrement(ref currentRecSendCount);            
+            Interlocked.Decrement(ref currentRecSendCount);
 
-            receiveSendEventArgs.AcceptSocket.Shutdown(SocketShutdown.Both);
+            try {
+
+                receiveSendEventArgs.AcceptSocket.Shutdown(SocketShutdown.Both);
+
+            }
+            catch { }            
 
             bool willRaiseEvent = receiveSendEventArgs.AcceptSocket.DisconnectAsync(receiveSendEventArgs);
             if (!willRaiseEvent)

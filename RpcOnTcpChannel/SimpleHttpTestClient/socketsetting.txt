@@ -1,0 +1,6 @@
+﻿//hostinfo:127.0.0.1|6969
+hostinfo:10.9.60.63|7002
+connectsocket_count:30
+datasocket_count:100
+buffersize:1024
+timeoutbyms(ms):1000

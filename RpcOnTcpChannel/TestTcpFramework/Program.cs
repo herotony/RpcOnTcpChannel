@@ -52,10 +52,10 @@ namespace TestTcpFramework
 
                         _sw.Stop();
 
-                        if (_sw.ElapsedMilliseconds > 6)
-                            log.Error("long time:" + _sw.ElapsedMilliseconds.ToString());
+                        //if (_sw.ElapsedMilliseconds > 6)
+                        //    log.Error("long time:" + _sw.ElapsedMilliseconds.ToString());
                         //log.Info(message);
-                        //log.Info(string.Format("tid:{0} in sid:{1} with cnt:{2} consumetime:{3} ms", tranId, sid, feedback,_sw.ElapsedMilliseconds));
+                        log.Info(string.Format("tid:{0} in sid:{1} with cnt:{2} consumetime:{3} ms", tranId, sid, feedback,_sw.ElapsedMilliseconds));
                     }
 
                 });

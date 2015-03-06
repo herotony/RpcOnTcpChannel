@@ -26,7 +26,9 @@ namespace TcpFramework.Client
         private static SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private static SocketAsyncEventArgPool poolOfConnectEventArgs;
 
-        private static ClientSocketProcessor processor;
+        private static  ClientSocketProcessor processor;
+
+        //private static Semaphore maxCurrentSignal = new Semaphore(10,10);
 
         public delegate byte[] PickResult(int tokenId);
 
@@ -102,28 +104,40 @@ namespace TcpFramework.Client
         private ManualResetEvent manualResetEvent = new ManualResetEvent(false);
 
         public byte[] SendRequest(byte[] sendData, ref string message) {
-            
-            int _tokenId = GetNewTokenId();            
 
-            Message _message = new Message();
-            _message.TokenId = _tokenId;
-            _message.Content = sendData;
-            this.messageTokenId = _tokenId;
+            try {
 
-            processor.ReceiveFeedbackDataComplete += new EventHandler<ReceiveFeedbackDataCompleteEventArg>(Processor_ReceiveFeedbackDataComplete);                                   
+                //maxCurrentSignal.WaitOne();
 
-            List<Message> list = new List<Message>();
-            list.Add(_message);
-            processor.SendMessage(list, clientSetting.serverEndPoint);
+                int _tokenId = GetNewTokenId();
 
-            if (manualResetEvent.WaitOne(timeOutByMS))
-            {
-                message = "ok";
-                return result;
+                Message _message = new Message();
+                _message.TokenId = _tokenId;
+                _message.Content = sendData;
+                this.messageTokenId = _tokenId;
+
+                //processor.ReceiveFeedbackDataComplete += new EventHandler<ReceiveFeedbackDataCompleteEventArg>(Processor_ReceiveFeedbackDataComplete);                                   
+                processor.ReceiveFeedbackDataComplete += Processor_ReceiveFeedbackDataComplete;
+
+                List<Message> list = new List<Message>();
+                list.Add(_message);
+                processor.SendMessage(list, clientSetting.serverEndPoint);
+
+                if (manualResetEvent.WaitOne(timeOutByMS))
+                {
+                    message = "ok";                    
+                    return result;
+                }
+
+                message = "timeout";                
             }
+            catch { }
+            finally {
 
-            message = "timeout";
-
+               // maxCurrentSignal.Release();
+                processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;
+            }
+           
             return null;
         }
         
