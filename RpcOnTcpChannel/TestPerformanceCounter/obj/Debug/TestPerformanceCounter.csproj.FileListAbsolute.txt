@@ -1,0 +1,8 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\TestPerformanceCounter.exe.config
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\TestPerformanceCounter.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\TestPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\CustomPerformanceCounter.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\CustomPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Debug\TestPerformanceCounter.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Debug\TestPerformanceCounter.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Debug\TestPerformanceCounter.pdb

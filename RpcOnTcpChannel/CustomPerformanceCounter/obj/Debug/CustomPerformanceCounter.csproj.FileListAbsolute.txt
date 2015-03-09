@@ -1,0 +1,4 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\bin\Debug\CustomPerformanceCounter.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\bin\Debug\CustomPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\obj\Debug\CustomPerformanceCounter.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\obj\Debug\CustomPerformanceCounter.pdb

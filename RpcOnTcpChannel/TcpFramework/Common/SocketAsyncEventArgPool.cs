@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net.Sockets;
 
 namespace TcpFramework.Common
 {
     internal class SocketAsyncEventArgPool
     {
-        private Stack<SocketAsyncEventArgs> pool;
+        private ConcurrentStack<SocketAsyncEventArgs> pool;
 
-        internal SocketAsyncEventArgPool(Int32 capacity)
+        internal SocketAsyncEventArgPool()
 		{
-			this.pool = new Stack<SocketAsyncEventArgs>(capacity);
+			this.pool = new ConcurrentStack<SocketAsyncEventArgs>();
 		}
 
         internal int Count
@@ -20,15 +20,12 @@ namespace TcpFramework.Common
 
         internal SocketAsyncEventArgs Pop()
         {
-            lock (this.pool)
-            {
-                if (this.pool.Count > 0)
-                {
-                    return this.pool.Pop();
-                }
-                else
-                    return null;
-            }
+            SocketAsyncEventArgs idleSAEA;
+
+            if (!this.pool.TryPop(out idleSAEA))
+                return null;
+
+            return idleSAEA;
         }
 
         internal void Push(SocketAsyncEventArgs item)
@@ -38,10 +35,8 @@ namespace TcpFramework.Common
                 throw new ArgumentNullException("Items added to a SocketAsyncEventArgsPool cannot be null");
             }
 
-            lock (this.pool)
-            {
-                this.pool.Push(item);
-            }
+
+            this.pool.Push(item);           
         }
     }
 }

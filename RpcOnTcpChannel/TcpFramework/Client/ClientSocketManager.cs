@@ -45,18 +45,20 @@ namespace TcpFramework.Client
 
             clientSetting = ReadConfigFile.GetClientSetting();
 
-            timeOutByMS = clientSetting.timeOutByMS;
+            timeOutByMS = clientSetting.timeOutByMS;            
 
             //初始化后，不可更改！
             bufferManager = new BufferManager(clientSetting.bufferSize * clientSetting.opsToPreAllocate * clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize * clientSetting.opsToPreAllocate);
             bufferManager.InitBuffer();
 
             //用于负责建立连接的saea，无关buffermanager，10个足够！这部分实际在ClientSocketProcessor中可以动态增加
-            poolOfConnectEventArgs = new SocketAsyncEventArgPool(clientSetting.maxSimultaneousConnectOps);
+            //poolOfConnectEventArgs = new SocketAsyncEventArgPool(clientSetting.maxSimultaneousConnectOps);
+            poolOfConnectEventArgs = new SocketAsyncEventArgPool();
 
             //用于负责在建立好的连接上传输数据，涉及buffermanager，目前测试100～200个足够！这部分目前不支持动态增加！
             //因其buffermanager是事先分配好的一大块连续的固定内存区域，强烈建议不再更改，需要做好的就是事先的大小评估。
-            poolOfRecSendEventArgs = new SocketAsyncEventArgPool(clientSetting.numberOfSaeaForRecSend);
+            //poolOfRecSendEventArgs = new SocketAsyncEventArgPool(clientSetting.numberOfSaeaForRecSend);
+            poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
 
             //实际负责处理相关传输数据的关键核心类
             processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.maxSimultaneousConnectOps, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength);

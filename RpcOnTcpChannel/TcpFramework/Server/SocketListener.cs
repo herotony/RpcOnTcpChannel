@@ -42,8 +42,10 @@ namespace TcpFramework.Server
             this.bufferSize = setting.bufferSize;
 
             this.bufferManager = new BufferManager(setting.bufferSize * setting.numberOfSaeaForRecSend * setting.opsToPreAllocate, setting.bufferSize * setting.opsToPreAllocate);
-            this.poolOfAcceptEventArgs = new SocketAsyncEventArgPool(setting.maxSimultaneousConnectOps);
-            this.poolOfRecSendEventArgs = new SocketAsyncEventArgPool(setting.numberOfSaeaForRecSend);
+            //this.poolOfAcceptEventArgs = new SocketAsyncEventArgPool(setting.maxSimultaneousConnectOps);
+            //this.poolOfRecSendEventArgs = new SocketAsyncEventArgPool(setting.numberOfSaeaForRecSend);
+            this.poolOfAcceptEventArgs = new SocketAsyncEventArgPool();
+            this.poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
             this.maxConcurrentConnection = new Semaphore(setting.numberOfSaeaForRecSend, setting.numberOfSaeaForRecSend);
 
             Init(setting);
