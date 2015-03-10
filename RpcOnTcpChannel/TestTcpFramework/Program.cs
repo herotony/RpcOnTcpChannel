@@ -17,17 +17,18 @@ namespace TestTcpFramework
 
         static void Main(string[] args)
         {
-            
-
-           
+            int totalLoopcount = 0;        
 
             while (true) {
 
                 string message = string.Empty;
 
+                Console.WriteLine("start");
+
                 int testCount = 1000;
                 int faileCount = 0;
                 int successCount = 0;
+
                 Task[] tasks = new Task[testCount];
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
@@ -91,13 +92,17 @@ namespace TestTcpFramework
 
                 //Thread.Sleep(10000);
 
+                Console.WriteLine("all queue over!");
+
                 Task.WaitAll(tasks);
 
                 sw.Stop();
 
-                log.Info(string.Format("共耗时:{0}毫秒,ok:{1},fail:{2}", sw.ElapsedMilliseconds, successCount, faileCount));
+                totalLoopcount++;
 
-                Thread.Sleep(1000);
+                log.Info(string.Format("共耗时:{0}毫秒,ok:{1},fail:{2} loop:{3}", sw.ElapsedMilliseconds, successCount, faileCount,totalLoopcount));
+
+                Thread.Sleep(100);
 
             }                       
 

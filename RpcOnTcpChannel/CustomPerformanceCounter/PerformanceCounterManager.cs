@@ -23,15 +23,17 @@ namespace CustomPerformanceCounter
         }
 
         //key:计数器名称,value:计数器描述
-        public bool CreatePerformanceCounter(Dictionary<string, string> dictCounterInfo) {
+        public bool CreatePerformanceCounter(Dictionary<string, PerformanceCounterType> dictCounterInfo)
+        {
 
             try {
+
                 foreach (string counterName in dictCounterInfo.Keys)
                 {
-                    AddSimplePerformanceCounter(counterName, dictCounterInfo[counterName]);
+                    AddSimplePerformanceCounter(counterName,"", dictCounterInfo[counterName]);
                 }
 
-                PerformanceCounterCategory.Create(categoryName, "", PerformanceCounterCategoryType.MultiInstance, counterCollection);
+                PerformanceCounterCategory.Create(categoryName, "", PerformanceCounterCategoryType.SingleInstance, counterCollection);
 
                 return true;
             }
@@ -43,9 +45,9 @@ namespace CustomPerformanceCounter
             return false;           
         }       
 
-        private void AddSimplePerformanceCounter(string counterName,string counterDescription) {
+        private void AddSimplePerformanceCounter(string counterName,string counterDescription,PerformanceCounterType pType) {
 
-            CounterCreationData data = new CounterCreationData(counterName, counterDescription, PerformanceCounterType.NumberOfItems64);
+            CounterCreationData data = new CounterCreationData(counterName, counterDescription, pType);
 
             counterCollection.Add(data);                        
         }

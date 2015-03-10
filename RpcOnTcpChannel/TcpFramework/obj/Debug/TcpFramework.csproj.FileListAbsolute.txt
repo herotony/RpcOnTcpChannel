@@ -2,3 +2,4 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Debug\TcpFramewor
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Debug\TcpFramework.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\obj\Debug\TcpFramework.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\obj\Debug\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\bin\Debug\log4net.dll

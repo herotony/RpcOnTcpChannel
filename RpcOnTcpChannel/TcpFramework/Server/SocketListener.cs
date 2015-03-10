@@ -179,6 +179,7 @@ namespace TcpFramework.Server
         private void HandleBadAccept(SocketAsyncEventArgs acceptEventArgs)
         {           
             acceptEventArgs.AcceptSocket.Close();
+            acceptEventArgs.AcceptSocket = null;//win2003 issue,防止safe handle has been closed错误
             this.poolOfAcceptEventArgs.Push(acceptEventArgs);
         }
 

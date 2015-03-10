@@ -26,22 +26,16 @@ namespace TcpFramework.Client
         internal int currentConnectOpCount = 0;
         internal int currentRecSendCount = 0;       
 
-        #endregion
+        #endregion              
 
         private SocketAsyncEventArgPool poolOfRecSendEventArgs;
-        private SocketAsyncEventArgPool poolOfConnectEventArgs;
-
-        private string categoryName = "tcpframework_clientsocketprocessor";
-        private PerformanceCounter pStartConnectCounter;
-        private PerformanceCounter pProcessConnectCounter;
-        private PerformanceCounter pStartSendCounter;
-        private PerformanceCounter pProcessSendCounter;
-        private PerformanceCounter pStartReceiveCounter;
-        private PerformanceCounter pProcessReceiveCounter;
-        private PerformanceCounter pStartDisconnectCounter;
+        private SocketAsyncEventArgPool poolOfConnectEventArgs;              
 
         //允许的最大并发连接数
         private Semaphore maxConcurrentConnection;
+
+        int concurrentCount = 0;
+        bool locked = false;
 
         //每个连接最多能发送的消息数量，一般为一次一条
         private int numberMessagesOfPerConnection;
@@ -49,48 +43,63 @@ namespace TcpFramework.Client
         private int prefixHandleLength;
         private int bufferSize;
 
+        private void StatisticAvarageRunTime(PerformanceCounter pRunCounter,PerformanceCounter pBaseCounter) {
+
+            pRunCounter.RawValue = Stopwatch.GetTimestamp();
+            pBaseCounter.Increment();
+        }
+      
+
         public ClientSocketProcessor(SocketAsyncEventArgPool connectPool, SocketAsyncEventArgPool recSendPool, int maxRecSendConnection, int bufferSize, int numberMessageOfPerConnection, int prefixHandleLength) {
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
 
+            Console.WriteLine("concurrent number:{0}", maxRecSendConnection);
+
             this.maxConcurrentConnection = new Semaphore(maxRecSendConnection, maxRecSendConnection);
 
             this.bufferSize = bufferSize;
             this.numberMessagesOfPerConnection = numberMessageOfPerConnection;
-            this.prefixHandleLength = prefixHandleLength;
+            this.prefixHandleLength = prefixHandleLength;                     
+        }              
 
-            InitPerformanceCounter();            
-        }
+        private void DebugInfo(string functionName) {
 
-        private void InitPerformanceCounter() {
-            
-            pStartConnectCounter = CreatePerformanceCounter("StartConnect", categoryName);
-            pProcessConnectCounter = CreatePerformanceCounter("ProcessConnect", categoryName);
-            pStartSendCounter = CreatePerformanceCounter("StartSend", categoryName);
-            pProcessSendCounter = CreatePerformanceCounter("ProcessSend", categoryName);
-            pStartReceiveCounter = CreatePerformanceCounter("StartReceive", categoryName);
-            pProcessReceiveCounter = CreatePerformanceCounter("ProcessReceive", categoryName);
-            pStartDisconnectCounter = CreatePerformanceCounter("StartDisconnect", categoryName);
-        }
-
-        private PerformanceCounter CreatePerformanceCounter(string counterName, string categoryName) {
-
-            PerformanceCounter _counter = new PerformanceCounter();
-            _counter.CategoryName = categoryName;
-            _counter.CounterName = counterName;
-            _counter.InstanceName = string.Format("{0}on{1}", counterName, Thread.CurrentThread.ManagedThreadId);
-            _counter.InstanceLifetime = PerformanceCounterInstanceLifetime.Process;
-            _counter.ReadOnly = false;
-            _counter.RawValue = 0;
-
-            return _counter;
+            if(locked)
+                Console.WriteLine(string.Format("wait on {0} [thid:{1}] currentConnectOpCount:{2} currentRecSendCount:{3} maxConnectOpCountEver:{4} maxConnectRecSendCountEver:{5} ", Thread.CurrentThread.ManagedThreadId, functionName,currentConnectOpCount,currentRecSendCount,maxConnectOpCountEver,maxConnectRecSendCountEver));
         }
 
         internal void SendMessage(List<Message> messages, IPEndPoint serverEndPoint)
         {
             //允许最大的并发传输数量为maxRecSendConnection，否则处于等待！
-            maxConcurrentConnection.WaitOne();
+            if (concurrentCount.Equals(26))
+                locked = true;
+            else
+                locked = false;
+
+            bool permitIncoming = maxConcurrentConnection.WaitOne(1000);
+
+            if (!permitIncoming) {
+
+                if (ReceiveFeedbackDataComplete != null)
+                {
+                    for (int i = 0; i < messages.Count; i++) {
+
+                        ReceiveFeedbackDataCompleteEventArg e = new ReceiveFeedbackDataCompleteEventArg();
+                        e.MessageTokenId = messages[i].TokenId;
+                        e.FeedbackData = null;
+
+                        ReceiveFeedbackDataComplete(this, e);
+                    }                    
+                }
+
+                this.maxConcurrentConnection.Release();
+                return;
+            }
+
+            Interlocked.Increment(ref concurrentCount);
+            DebugInfo("SendMessage");
 
             SocketAsyncEventArgs connectEventArgs = this.poolOfConnectEventArgs.Pop();
 
@@ -110,11 +119,15 @@ namespace TcpFramework.Client
                 theConnectingToken.ArrayOfMessageReadyToSend = messages;
             }
 
+            DebugInfo("SendMessage2");
+
             StartConnect(connectEventArgs, serverEndPoint);
         }
 
         internal void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
+            DebugInfo("IO_Complete");
+
             // determine which type of operation just completed and call the associated handler
             switch (e.LastOperation)
             {
@@ -147,14 +160,19 @@ namespace TcpFramework.Client
                         }
 
                         this.maxConcurrentConnection.Release();
+                        Interlocked.Decrement(ref concurrentCount);
                         LogManager.Log(string.Empty, new ArgumentException("\r\nError in I/O Completed, LastOperation: " + e.LastOperation));
                     }
                     break;
             }
+
+            //StatisticAvarageRunTime(perfRunCounter, perfBaseCounter);
         }
 
         private void ProcessReceive(SocketAsyncEventArgs receiveSendEventArgs)
         {
+            DebugInfo("ProcessReceive");
+
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
             
             if (receiveSendEventArgs.SocketError != SocketError.Success)
@@ -240,6 +258,8 @@ namespace TcpFramework.Client
 
         private void StartReceive(SocketAsyncEventArgs receiveSendEventArgs)
         {
+            DebugInfo("StartReceive");
+
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
             
             receiveSendEventArgs.SetBuffer(receiveSendToken.bufferOffsetReceive, this.bufferSize);
@@ -254,6 +274,8 @@ namespace TcpFramework.Client
 
         private void ProcessSend(SocketAsyncEventArgs receiveSendEventArgs)
         {
+            DebugInfo("ProcessSend");
+
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
             if (receiveSendEventArgs.SocketError == SocketError.Success)
@@ -299,6 +321,8 @@ namespace TcpFramework.Client
 
         private void StartSend(SocketAsyncEventArgs receiveSendEventArgs)
         {
+            DebugInfo("StartSend");
+
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
             if (receiveSendToken.sendBytesRemainingCount <= this.bufferSize)
@@ -329,8 +353,8 @@ namespace TcpFramework.Client
         }
 
         private void ProcessConnect(SocketAsyncEventArgs connectEventArgs)
-        {            
-            pProcessConnectCounter.Increment();
+        {
+            DebugInfo("ProcessConnect"); 
 
             ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
 
@@ -388,6 +412,7 @@ namespace TcpFramework.Client
 
         private void ProcessConnectionError(SocketAsyncEventArgs connectEventArgs)
         {
+            DebugInfo("ProcessConnectionError");
             try
             {                
 
@@ -424,34 +449,43 @@ namespace TcpFramework.Client
             finally
             {
                 this.maxConcurrentConnection.Release();
+                Interlocked.Decrement(ref concurrentCount);
             }
         }
 
         private void StartConnect(SocketAsyncEventArgs connectEventArgs, IPEndPoint serverEndPoint)
         {
-            ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
+            try {
+                
+                ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
 
-            connectEventArgs.RemoteEndPoint = serverEndPoint;
-            connectEventArgs.AcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                connectEventArgs.RemoteEndPoint = serverEndPoint;
+                connectEventArgs.AcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            Interlocked.Increment(ref currentConnectOpCount);
-            if (currentConnectOpCount > maxConnectOpCountEver)
-                maxConnectOpCountEver = currentConnectOpCount;
+                Interlocked.Increment(ref currentConnectOpCount);
+                if (currentConnectOpCount > maxConnectOpCountEver)
+                    maxConnectOpCountEver = currentConnectOpCount;                
 
-            pStartConnectCounter.Increment();
+                bool willRaiseEvent = connectEventArgs.AcceptSocket.ConnectAsync(connectEventArgs);
+                if (!willRaiseEvent)
+                {
+                    ProcessConnect(connectEventArgs);
+                }                
+            }
+            catch (Exception startConnectErr) {
 
-            bool willRaiseEvent = connectEventArgs.AcceptSocket.ConnectAsync(connectEventArgs);
-            if (!willRaiseEvent)
-            {
-                ProcessConnect(connectEventArgs);
-            }            
+                this.maxConcurrentConnection.Release();
+                LogManager.Log("StartConnect", startConnectErr);
+                
+            }
+            
         }
 
         private void StartDisconnect(SocketAsyncEventArgs receiveSendEventArgs)
         {
-            Interlocked.Decrement(ref currentRecSendCount);
+            DebugInfo("StartDisconnect");
 
-            pStartDisconnectCounter.Increment();
+            Interlocked.Decrement(ref currentRecSendCount);            
 
             try {
                 
@@ -468,6 +502,7 @@ namespace TcpFramework.Client
 
         private void ProcessDisconnectAndCloseSocket(SocketAsyncEventArgs receiveSendEventArgs)
         {
+            DebugInfo("ProcessDisconnect");
             try
             {               
 
@@ -490,6 +525,7 @@ namespace TcpFramework.Client
             finally
             {
                 this.maxConcurrentConnection.Release();
+                Interlocked.Decrement(ref concurrentCount);
             }
         }
 
