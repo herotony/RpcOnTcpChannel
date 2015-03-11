@@ -28,8 +28,14 @@ namespace TcpFramework.Client
 
         #endregion              
 
+        private bool supportKeepAlive = false;
+        private SocketAsyncEventArgPool poolOfHeartBeatRecSendEventArgs;
+        private Thread thHeartBeat;
+        
+
         private SocketAsyncEventArgPool poolOfRecSendEventArgs;
-        private SocketAsyncEventArgPool poolOfConnectEventArgs;              
+        private SocketAsyncEventArgPool poolOfConnectEventArgs;   
+           
 
         //允许的最大并发连接数
         private Semaphore maxConcurrentConnection;
@@ -49,8 +55,7 @@ namespace TcpFramework.Client
             pBaseCounter.Increment();
         }
       
-
-        public ClientSocketProcessor(SocketAsyncEventArgPool connectPool, SocketAsyncEventArgPool recSendPool, int maxRecSendConnection, int bufferSize, int numberMessageOfPerConnection, int prefixHandleLength) {
+        public ClientSocketProcessor(SocketAsyncEventArgPool connectPool, SocketAsyncEventArgPool recSendPool, int maxRecSendConnection, int bufferSize, int numberMessageOfPerConnection, int prefixHandleLength,bool supportKeepAlive = false) {
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
@@ -61,7 +66,18 @@ namespace TcpFramework.Client
 
             this.bufferSize = bufferSize;
             this.numberMessagesOfPerConnection = numberMessageOfPerConnection;
-            this.prefixHandleLength = prefixHandleLength;                     
+            this.prefixHandleLength = prefixHandleLength;
+
+            this.supportKeepAlive = supportKeepAlive;
+
+            this.supportKeepAlive = true;
+            if (this.supportKeepAlive)
+            {
+                poolOfHeartBeatRecSendEventArgs = new SocketAsyncEventArgPool();
+                thHeartBeat = new Thread(new ThreadStart(RunHeartBeat));
+                thHeartBeat.IsBackground = true;
+                thHeartBeat.Start();
+            }
         }              
 
         private void DebugInfo(string functionName) {
@@ -78,7 +94,13 @@ namespace TcpFramework.Client
             else
                 locked = false;
 
-            bool permitIncoming = maxConcurrentConnection.WaitOne(1000);
+            if (supportKeepAlive) {
+
+                if (ReuseHeartBeatSAEA(messages))
+                    return;
+            }           
+
+            bool permitIncoming = maxConcurrentConnection.WaitOne();
 
             if (!permitIncoming) {
 
@@ -97,7 +119,7 @@ namespace TcpFramework.Client
                 this.maxConcurrentConnection.Release();
                 return;
             }
-
+          
             Interlocked.Increment(ref concurrentCount);
             DebugInfo("SendMessage");
 
@@ -122,6 +144,34 @@ namespace TcpFramework.Client
             DebugInfo("SendMessage2");
 
             StartConnect(connectEventArgs, serverEndPoint);
+        }
+
+        internal int GetReuseSAEA() {
+
+            if (!supportKeepAlive)
+                return 0;
+            else
+                return poolOfHeartBeatRecSendEventArgs.Count;
+        }
+
+        private bool ReuseHeartBeatSAEA(List<Message> messages) {
+
+            SocketAsyncEventArgs arg = poolOfHeartBeatRecSendEventArgs.Pop();
+
+            if (arg == null)
+                return false;
+
+            ClientUserToken userToken = (ClientUserToken)arg.UserToken;
+            userToken.CreateNewSendDataHolder();
+            SendDataHolder sendDataHodler = userToken.sendDataHolder;
+
+            sendDataHodler.SetSendMessage(messages);
+            MessagePreparer.GetDataToSend(arg);
+            sendDataHodler.ArrayOfMessageToSend[0].StartTime = DateTime.Now;
+           
+            StartSend(arg);            
+
+            return true;
         }
 
         internal void IO_Completed(object sender, SocketAsyncEventArgs e)
@@ -164,9 +214,7 @@ namespace TcpFramework.Client
                         LogManager.Log(string.Empty, new ArgumentException("\r\nError in I/O Completed, LastOperation: " + e.LastOperation));
                     }
                     break;
-            }
-
-            //StatisticAvarageRunTime(perfRunCounter, perfBaseCounter);
+            }            
         }
 
         private void ProcessReceive(SocketAsyncEventArgs receiveSendEventArgs)
@@ -199,7 +247,9 @@ namespace TcpFramework.Client
             // previous receive ops here. So receivedPrefixBytesDoneCount would be 0.)
             if (receiveSendToken.receivedPrefixBytesDoneCount < this.prefixHandleLength)
             {
-                remainingBytesToProcess = PrefixHandler.HandlePrefix(receiveSendEventArgs, receiveSendToken, remainingBytesToProcess);
+                bool getLengthInfoSuccessfully = false;
+
+                remainingBytesToProcess = PrefixHandler.HandlePrefix(receiveSendEventArgs, receiveSendToken, remainingBytesToProcess,ref getLengthInfoSuccessfully);
 
                 if (remainingBytesToProcess == 0)
                 {
@@ -241,10 +291,19 @@ namespace TcpFramework.Client
                     StartSend(receiveSendEventArgs);
                 }
                 else
-                {                    
-                    receiveSendToken.sendDataHolder.ArrayOfMessageToSend = null;
-                    //disconnect中会重新new一个senddataholder，numberofmessagehadsent即清零
-                    StartDisconnect(receiveSendEventArgs);
+                {
+
+                    if (!supportKeepAlive)
+                    {
+                        receiveSendToken.sendDataHolder.ArrayOfMessageToSend = null;
+                        //disconnect中会重新new一个senddataholder，numberofmessagehadsent即清零
+                        StartDisconnect(receiveSendEventArgs);
+                    }
+                    else { 
+
+                        //加入support keepalive机制处理逻辑   
+                        SetToHeartBeatStatus(receiveSendEventArgs,receiveSendToken);                        
+                    }                    
                 }               
             }
             else
@@ -253,6 +312,59 @@ namespace TcpFramework.Client
                 receiveSendToken.recPrefixBytesDoneThisOp = 0;
 
                 StartReceive(receiveSendEventArgs);
+            }
+        }
+
+        private void SetToHeartBeatStatus(SocketAsyncEventArgs e,ClientUserToken userToken) {
+
+            //加入support keepalive机制处理逻辑    
+            userToken.startTime = DateTime.Now;
+            poolOfHeartBeatRecSendEventArgs.Push(e);                     
+        }
+
+        private void RunHeartBeat() {
+
+            while (true) {
+
+                SocketAsyncEventArgs heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
+                List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
+                List<SocketAsyncEventArgs> listHeartBeat = new List<SocketAsyncEventArgs>();                                              
+
+                while (heartBeatSAEA != null)
+                {
+                    ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
+
+                    if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds > 10) {
+                        
+                        listHeartBeat.Add(heartBeatSAEA);                        
+
+                    } else {
+
+                        listRepush.Add(heartBeatSAEA);
+                    }
+
+                    //确保不影响并发复用
+                    if (poolOfConnectEventArgs.Count < 2)
+                        break;
+
+                    heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
+                }
+
+                //Console.WriteLine("repush heartbeat count:{0}", listRepush.Count);
+
+                for (int i = 0; i < listRepush.Count; i++)
+                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);
+
+                //Console.WriteLine("heartbeat saea count:{0}", listHeartBeat.Count);
+
+                for (int i = 0; i < listHeartBeat.Count; i++)
+                {
+                    MessagePreparer.GetHeartBeatDataToSend(listHeartBeat[i]);
+                    StartSend(listHeartBeat[i]);
+                    //Console.WriteLine("{0} send heartbeat start send", listHeartBeat[i].AcceptSocket.LocalEndPoint);
+                }                
+
+                Thread.Sleep(1000);
             }
         }
 
@@ -286,11 +398,29 @@ namespace TcpFramework.Client
                 // operation will be required to send the data.
                 if (receiveSendToken.sendBytesRemainingCount == 0)
                 {
-                    //incrementing count of messages sent on this connection                
-                    receiveSendToken.sendDataHolder.NumberOfMessageHadSent++;
+                    if (!supportKeepAlive)
+                    {
+                        //incrementing count of messages sent on this connection                
+                        receiveSendToken.sendDataHolder.NumberOfMessageHadSent++;
 
-                    //准备接受返回数据
-                    StartReceive(receiveSendEventArgs);
+                        //准备接受返回数据
+                        StartReceive(receiveSendEventArgs);
+                    }
+                    else {
+
+                        if (!receiveSendToken.sendDataHolder.OnHeartBeatStatus)
+                        {
+                            //incrementing count of messages sent on this connection                
+                            receiveSendToken.sendDataHolder.NumberOfMessageHadSent++;
+
+                            //准备接受返回数据
+                            StartReceive(receiveSendEventArgs);
+                        }
+                        else {
+
+                            SetToHeartBeatStatus(receiveSendEventArgs,receiveSendToken);
+                        }
+                    }                   
                 }
                 else
                 {
@@ -302,7 +432,7 @@ namespace TcpFramework.Client
                 }
             }
             else
-            {
+            {                
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
 
@@ -396,6 +526,12 @@ namespace TcpFramework.Client
             {
                 ProcessConnectionError(connectEventArgs);
             }
+        }
+
+        private bool ProcessSendOnConnectedSAEA() {
+
+
+            return false;
         }
 
         private void CloseSocket(Socket theSocket)

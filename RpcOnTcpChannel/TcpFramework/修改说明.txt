@@ -1,0 +1,18 @@
+﻿20150311：
+
+ 增加支持长连接相关逻辑(避免端口耗尽的问题)
+ 
+ 服务端：socketlistener(支持配置supportkeepalive)
+         如果supportKeepAlive为true:
+         1、增加一个线程和一个字典，字典保存已建立连接的recsendsocket，即recsendsocket在非socketerror和transferbyte==0的情况下，一律不再主动关闭，而是放入了
+		    字典中保存，并在相关usertoken中记录status为心跳保持连接状态并刷新相关serversession的时间。
+		 2、同时起线程每10秒扫描该字典，对于超过一分钟没有复用的recsendsocke进行清理关闭操作。
+
+ 客户端：clientsocketprocessor(支持配置supportkeepalive)
+        如果supportKeepAlive为true
+	    1、实例化一个ConcurrentStack池：poolOfHeartBeatRecSend
+		2、当SendMessage时，第一时间从poolOfHeartBeatRecSend提取一个已建立连接的SAEA，如果返回null，走并发连接控制等流程。
+		   如果提取到SAEA，则用该SAEA发送到服务器。
+		3、分别在ProcessSend和ProcessReceive，成功发送和接收后进行SetToHeartBeatStatus处理，即立刻将当前SAEA Push到poolOfHeartBeatRecSend，线程休眠10秒后
+		   随机从poolOfHeartBeatRecSend提取SAEA发送心跳信息。
+		   这里处理不对，还是另起一线程更好！否则影响所有的并发线程都休眠！！！

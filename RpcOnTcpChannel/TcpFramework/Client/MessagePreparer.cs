@@ -42,5 +42,21 @@ namespace TcpFramework.Client
             theUserToken.bytesSentAlreadyCount = 0;
         }
 
+        internal static void GetHeartBeatDataToSend(SocketAsyncEventArgs e) {
+
+            ClientUserToken theUserToken = (ClientUserToken)e.UserToken;
+            theUserToken.CreateNewSendDataHolder();
+            SendDataHolder dataHolder = theUserToken.sendDataHolder;
+            dataHolder.OnHeartBeatStatus = true;
+
+            byte[] arrayOfBytesInPrefix = BitConverter.GetBytes(0);
+            theUserToken.dataToSend = new Byte[theUserToken.sendPrefixLength];
+            theUserToken.messageTokenId = 0;
+
+            Buffer.BlockCopy(arrayOfBytesInPrefix, 0, theUserToken.dataToSend, 0, theUserToken.sendPrefixLength);
+            theUserToken.sendBytesRemainingCount = theUserToken.sendPrefixLength;
+            theUserToken.bytesSentAlreadyCount = 0;            
+        }
+
     }
 }

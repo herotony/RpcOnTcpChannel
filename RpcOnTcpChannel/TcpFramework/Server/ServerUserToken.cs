@@ -24,12 +24,14 @@ namespace TcpFramework.Server
             this.sessionId = Interlocked.Increment(ref ServerSessionId);
         }
 
-        internal void CreateNewServerSession(SocketAsyncEventArgs e) {
+        internal void CreateNewServerSession(SocketAsyncEventArgs e,bool onHeartBeatStatus = false) {
 
             serverSession = new ServerSession();
             serverSession.SessionId = this.sessionId;
             serverSession.ReceiveTransmissionId = Interlocked.Increment(ref ServerTransmissionId);
             serverSession.RemoteEndPoint = e.AcceptSocket.RemoteEndPoint;
+            serverSession.CreateSessionTime = DateTime.Now;
+            serverSession.OnHeartBeatStatus = onHeartBeatStatus;
         }
 
         internal int SessionId {

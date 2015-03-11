@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,13 @@ namespace TcpFramework.Server
         //允许的最大并发负责数据传输的socket连接数
         private Semaphore maxConcurrentConnection;
 
+        private bool supportKeepAlive = false;        
+        private bool checkLongTimeIdleSAEA = false;
+        private ConcurrentDictionary<int, SocketAsyncEventArgs> dictOnlineIdlebyHeartBeatSAEA = new ConcurrentDictionary<int, SocketAsyncEventArgs>();
+        
+        private Thread thCheckHeartBeatSAEA;
+
+        
         private BufferManager bufferManager;
 
         Socket listenSocket = null;
@@ -34,6 +42,7 @@ namespace TcpFramework.Server
 
         public SocketListener(Func<byte[], byte[]> dataProcessor) {
 
+            this.supportKeepAlive = true;
             this.dataProcessor = dataProcessor;
 
             ServerSetting setting = ReadConfigFile.GetServerSetting();
@@ -91,6 +100,15 @@ namespace TcpFramework.Server
                 this.poolOfRecSendEventArgs.Push(eventArgObjectForPool);
             }
 
+            if (supportKeepAlive) {
+
+                thCheckHeartBeatSAEA = new Thread(new ThreadStart(RunCheckLongTimeIdleSAEA));
+                thCheckHeartBeatSAEA.IsBackground = true;
+                thCheckHeartBeatSAEA.Start();
+
+                //LogManager.Log("th start!");
+            }
+
         }
 
         private void ProcessAccept(SocketAsyncEventArgs acceptEventArgs)
@@ -137,6 +155,8 @@ namespace TcpFramework.Server
 
         private void StartAccept()
         {
+            this.maxConcurrentConnection.WaitOne();
+
             SocketAsyncEventArgs acceptEventArg;
 
             if (this.poolOfAcceptEventArgs.Count > 1)
@@ -155,9 +175,7 @@ namespace TcpFramework.Server
             {
                 acceptEventArg = new SocketAsyncEventArgs();
                 acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
-            }           
-
-            this.maxConcurrentConnection.WaitOne();
+            }                       
 
             bool willRaiseEvent = listenSocket.AcceptAsync(acceptEventArg);
             if (!willRaiseEvent)
@@ -208,7 +226,7 @@ namespace TcpFramework.Server
             if (receiveSendEventArgs.SocketError != SocketError.Success)
             {
                 LogManager.Log(string.Format("ProcessReceive ERROR: {0}, receiveSendToken sessionid:{1}", receiveSendEventArgs.SocketError, receiveSendToken.serverSession.SessionId));
-
+                
                 receiveSendToken.Reset();
                 CloseClientSocket(receiveSendEventArgs);
 
@@ -222,13 +240,27 @@ namespace TcpFramework.Server
 
                 return;
             }
-
+            
             int remainingBytesToProcess = receiveSendEventArgs.BytesTransferred;
 
+            //LogManager.Log(string.Format("getlength:{0} on {1} with prefixDoneCount:{2}", remainingBytesToProcess, receiveSendEventArgs.AcceptSocket.RemoteEndPoint,receiveSendToken.receivedPrefixBytesDoneCount));
+            
             if (receiveSendToken.receivedPrefixBytesDoneCount < this.receivePrefixLength)
-            {
-                remainingBytesToProcess = PrefixHandler.HandlePrefix(receiveSendEventArgs, receiveSendToken, remainingBytesToProcess);
-                
+            {                
+                bool getLengthInfoSuccessfully = false;
+
+                remainingBytesToProcess = PrefixHandler.HandlePrefix(receiveSendEventArgs, receiveSendToken, remainingBytesToProcess,ref getLengthInfoSuccessfully);
+
+                //add by saosin on  20150311
+                if (getLengthInfoSuccessfully && supportKeepAlive) {
+                    
+                    if (receiveSendToken.lengthOfCurrentIncomingMessage.Equals(0)) {
+
+                        SetToHeartBeatStatus(receiveSendEventArgs, receiveSendToken);
+                        return;
+                    }
+                }
+
                 if (remainingBytesToProcess == 0)
                 {
                     // We need to do another receive op, since we do not have
@@ -257,10 +289,19 @@ namespace TcpFramework.Server
                     StartSend(receiveSendEventArgs);                  
                 }
                 else
-                {                    
-                    receiveSendToken.Reset();
-                    CloseClientSocket(receiveSendEventArgs);
-                    return;
+                {
+                    if (!supportKeepAlive)
+                    {
+                        receiveSendToken.Reset();
+                        CloseClientSocket(receiveSendEventArgs);
+                        return;
+                    }
+                    else {
+
+                        //just heartbeat for keepAlive
+                        //开始下次接收，不过理论上不该进入该逻辑，毕竟先前判断了内容是否为空！
+                        SetToHeartBeatStatus(receiveSendEventArgs, receiveSendToken);
+                    }                    
                 }
             }
             else
@@ -358,6 +399,19 @@ namespace TcpFramework.Server
             //If it has, then dataMessageReceived should be null.
             receiveSendToken.dataMessageReceived = null;
 
+            if (supportKeepAlive) {
+
+                if (!checkLongTimeIdleSAEA) { 
+                    
+                    if(dictOnlineIdlebyHeartBeatSAEA.ContainsKey(receiveSendToken.SessionId)){
+
+                        //Socket异常时导致的关闭，才会进入这个处理
+                        SocketAsyncEventArgs arg;
+                        dictOnlineIdlebyHeartBeatSAEA.TryRemove(receiveSendToken.SessionId, out arg);                         
+                    }
+                }
+            }
+
             // Put the SocketAsyncEventArg back into the pool,
             // to be used by another client. This 
             this.poolOfRecSendEventArgs.Push(e);
@@ -372,7 +426,100 @@ namespace TcpFramework.Server
             this.maxConcurrentConnection.Release();
         }
 
-        public void Stop() {
+        private void SetToHeartBeatStatus(SocketAsyncEventArgs receiveSendEventArgs, ServerUserToken receiveSendToken)
+        {
+            //just heartbeat for keepAlive，即不主动关闭，只是挂起并记录入字典便于清除长时间挂起SAEA
+            //开始下次接收
+            receiveSendToken.CreateNewServerSession(receiveSendEventArgs,true);
+            receiveSendToken.dataMessageReceived = null;
+            receiveSendToken.Reset();
+
+            if (dictOnlineIdlebyHeartBeatSAEA.ContainsKey(receiveSendToken.SessionId))
+            {
+                //Console.WriteLine(string.Format("heartbeat saea already exist!{0}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint));
+                StartReceive(receiveSendEventArgs);
+                return;
+            }
+
+            bool result = dictOnlineIdlebyHeartBeatSAEA.TryAdd(receiveSendToken.SessionId, receiveSendEventArgs);
+
+            if (result)
+            {
+                //Console.WriteLine(string.Format("try add heartbeat saea successfully!{0}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint));
+                StartReceive(receiveSendEventArgs);
+            }
+            else
+            {
+                //Console.WriteLine(string.Format("try add heartbeat saea falied then we close it!{0}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint));
+                CloseClientSocket(receiveSendEventArgs);
+            }            
+        }
+
+        private List<int> GetShouldRemoveLongTimeIdleOnlineSAEA() {
+           
+            List<int> listLongTimeIdleSessionId = new List<int>();
+
+            //Console.WriteLine(string.Format("establish online saea count:{0}", dictOnlineIdlebyHeartBeatSAEA.Count));
+
+            foreach (int sessionId in dictOnlineIdlebyHeartBeatSAEA.Keys) {
+
+                SocketAsyncEventArgs arg = dictOnlineIdlebyHeartBeatSAEA[sessionId];
+
+                ServerUserToken userToken = (ServerUserToken)arg.UserToken;
+
+                if (userToken.serverSession.OnHeartBeatStatus) {
+
+                    if (DateTime.Now.Subtract(userToken.serverSession.CreateSessionTime).TotalSeconds > 60)
+                        listLongTimeIdleSessionId.Add(sessionId);
+                }
+            }            
+
+            return listLongTimeIdleSessionId;
+        }
+
+        private void RunCheckLongTimeIdleSAEA() {
+
+            while (true) {
+
+                checkLongTimeIdleSAEA = true;
+
+                List<int> listSid = GetShouldRemoveLongTimeIdleOnlineSAEA();
+
+                //Console.WriteLine(string.Format("need force close socket count:{0}", listSid.Count));
+
+                if (listSid.Count > 0) {
+
+                    for (int i = 0; i < listSid.Count; i++) {
+
+                        SocketAsyncEventArgs arg;
+                        bool result = dictOnlineIdlebyHeartBeatSAEA.TryRemove(listSid[i],out arg);
+
+                        if (result) {
+
+                            if (arg.AcceptSocket != null) {
+
+                                try {
+
+                                    //Console.WriteLine(string.Format("force close remote socket:{0}", arg.AcceptSocket.RemoteEndPoint));
+
+                                    ServerUserToken userToken = (ServerUserToken)arg.UserToken;
+                                    userToken.Reset();
+                                    CloseClientSocket(arg);  
+                                }
+                                catch { }
+                            }                                                     
+                        }                        
+                    }
+                }
+
+                checkLongTimeIdleSAEA = false;
+
+                Thread.Sleep(10000);
+            }
+        }
+
+        public void Stop()
+        {
 
             try {
 

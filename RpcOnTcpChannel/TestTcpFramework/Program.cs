@@ -25,7 +25,7 @@ namespace TestTcpFramework
 
                 Console.WriteLine("start");
 
-                int testCount = 1000;
+                int testCount = 10000;
                 int faileCount = 0;
                 int successCount = 0;
 
@@ -99,10 +99,14 @@ namespace TestTcpFramework
                 sw.Stop();
 
                 totalLoopcount++;
+                
+                 ClientSocketManager smgr2 = new ClientSocketManager();                 
 
                 log.Info(string.Format("共耗时:{0}毫秒,ok:{1},fail:{2} loop:{3}", sw.ElapsedMilliseconds, successCount, faileCount,totalLoopcount));
 
                 Thread.Sleep(100);
+
+                break;
 
             }                       
 

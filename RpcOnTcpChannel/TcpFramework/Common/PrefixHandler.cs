@@ -5,14 +5,14 @@ namespace TcpFramework.Common
 {
     internal class PrefixHandler
     {
-        internal static int  HandlePrefix(SocketAsyncEventArgs arg,DataUserToken userToken,int remainingBytesToProcess){
+        internal static int  HandlePrefix(SocketAsyncEventArgs arg,DataUserToken userToken,int remainingBytesToProcess,ref bool getLengthInfoSuccessfully){
 
             if (userToken.receivedPrefixBytesDoneCount.Equals(0)) {
 
                 userToken.byteArrayForPrefix = new byte[userToken.receivePrefixLength];
             }
 
-            if (remainingBytesToProcess > (userToken.receivePrefixLength - userToken.receivedPrefixBytesDoneCount))
+            if (remainingBytesToProcess >= (userToken.receivePrefixLength - userToken.receivedPrefixBytesDoneCount))
             {
                 //接收数据足够多，甚至已经包含了具体的内容数据
                 Buffer.BlockCopy(arg.Buffer, userToken.receiveMessageOffset - userToken.receivePrefixLength + userToken.receivedPrefixBytesDoneCount, userToken.byteArrayForPrefix, userToken.receivedPrefixBytesDoneCount, userToken.receivePrefixLength - userToken.receivedPrefixBytesDoneCount);
@@ -22,6 +22,11 @@ namespace TcpFramework.Common
                 userToken.receivedPrefixBytesDoneCount = userToken.receivePrefixLength;
 
                 userToken.lengthOfCurrentIncomingMessage = BitConverter.ToInt32(userToken.byteArrayForPrefix, 0);
+
+                if (userToken.lengthOfCurrentIncomingMessage.Equals(0))
+                    remainingBytesToProcess = 0;
+
+                getLengthInfoSuccessfully = true;
             }
             else {
 

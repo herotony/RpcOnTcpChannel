@@ -7,6 +7,8 @@ using System.Text;
 using SharpRpc;
 using SharpRpc.Topology;
 
+using log4net;
+
 namespace SimpleHttpTestClient
 {
     /// <summary>
@@ -14,6 +16,7 @@ namespace SimpleHttpTestClient
     /// </summary>
     public class defaultHandle : IHttpHandler
     {
+        private static ILog logDefault = LogManager.GetLogger(typeof(defaultHandle));
         private static object lockObject= new object();
         private static TopologyLoader toplogyLoader;
         private static RpcClient rpcClient;

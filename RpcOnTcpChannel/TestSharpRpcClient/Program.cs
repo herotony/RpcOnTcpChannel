@@ -29,12 +29,12 @@ namespace TestSharpRpcClient
 
             //string content = RunTestHttpData();
 
-            //toplogyLoader = new TopologyLoader("../../../Topology/topology.txt", Encoding.UTF8, new TopologyParser());
-            //rpcClient = new RpcClient(toplogyLoader, new TimeoutSettings(500));
+            toplogyLoader = new TopologyLoader("../../../Topology/topology.txt", Encoding.UTF8, new TopologyParser());
+            rpcClient = new RpcClient(toplogyLoader, new TimeoutSettings(500));
 
-            //instance = rpcClient.GetService<IProcessGoodDetail.IGoodManager>();
+            instance = rpcClient.GetService<IProcessGoodDetail.IGoodManager>();
 
-            int testCount = 1000;
+            int testCount = 10000;
             Task[] tsks = new Task[testCount];
 
             for (int i = 0; i < tsks.Length; i++)
@@ -71,15 +71,12 @@ namespace TestSharpRpcClient
                 else
                     Interlocked.Increment(ref failCount);
 
-                Console.WriteLine(string.Format("tid:{0} {1}", Thread.CurrentThread.ManagedThreadId, result));
+                //Console.WriteLine(string.Format("tid:{0} {1}", Thread.CurrentThread.ManagedThreadId, result));
             }
             catch {
 
                 Interlocked.Increment(ref failCount);
-            }
-            
-
-           
+            }                       
         }
 
         private static string  RunTestHttpData() {

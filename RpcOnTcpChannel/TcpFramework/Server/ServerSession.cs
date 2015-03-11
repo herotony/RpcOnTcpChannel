@@ -11,5 +11,7 @@ namespace TcpFramework.Server
         internal EndPoint RemoteEndPoint;
         internal int SessionId;
         internal int ReceiveTransmissionId;
+        internal DateTime CreateSessionTime;
+        internal bool OnHeartBeatStatus;
     }
 }

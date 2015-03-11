@@ -117,8 +117,7 @@ namespace TcpFramework.Client
                 _message.TokenId = _tokenId;
                 _message.Content = sendData;
                 this.messageTokenId = _tokenId;
-
-                //processor.ReceiveFeedbackDataComplete += new EventHandler<ReceiveFeedbackDataCompleteEventArg>(Processor_ReceiveFeedbackDataComplete);                                   
+                
                 processor.ReceiveFeedbackDataComplete += Processor_ReceiveFeedbackDataComplete;
 
                 List<Message> list = new List<Message>();
@@ -142,7 +141,11 @@ namespace TcpFramework.Client
            
             return null;
         }
-        
+
+        public static int GetReuseSAEA() {
+
+            return processor.GetReuseSAEA();
+        }
 
         private void Processor_ReceiveFeedbackDataComplete(object sender, ReceiveFeedbackDataCompleteEventArg e) {
 
