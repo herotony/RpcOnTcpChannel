@@ -25,12 +25,14 @@ namespace TcpFramework.Server
 
 		// 1 for receive, 1 for send. used in BufferManager，所以一般为2，代表一个用于收数据，一个用于发数据
 		//用于BufferManager时，就是：numberOfSaeaForRecSend * bufferSize * 2 而每个连接的是 buffersize * 2
-		internal int opsToPreAllocate{get;private set;}		
+		internal int opsToPreAllocate{get;private set;}
+
+        internal bool useKeepAlive { get; private set; }
 
 		internal IPEndPoint localEndPoint;
 
 
-        public ServerSetting(IPEndPoint theLocalEndPoint, int maxSimultaneousConnectOps, int numberOfSaeaForRecSend, int bufferSize = 128, int receivePrefixLength = 4, int sendPrefixLength = 4, int opsToPreAlloc = 2)
+        public ServerSetting(IPEndPoint theLocalEndPoint, int maxSimultaneousConnectOps, int numberOfSaeaForRecSend, int bufferSize = 128, int receivePrefixLength = 4, int sendPrefixLength = 4, int opsToPreAlloc = 2,bool useKeepAlive = true)
 		{
             this.localEndPoint = theLocalEndPoint;          
 
@@ -38,6 +40,7 @@ namespace TcpFramework.Server
             this.numberOfSaeaForRecSend = numberOfSaeaForRecSend;
            
             this.bufferSize = bufferSize;
+            this.useKeepAlive = useKeepAlive;
 
             //下面这些都应该是默认值，永不修改！
 			this.receivePrefixLength = receivePrefixLength;			

@@ -21,42 +21,72 @@ namespace TestSharpRpcClient
 
         private static int successCount = 0;
         private static int failCount = 0;
+        private static Thread thbyside;
 
         static void Main(string[] args)
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            thbyside = new Thread(Run);
+            thbyside.IsBackground = true;
+            thbyside.Start();            
 
             //string content = RunTestHttpData();
+
 
             toplogyLoader = new TopologyLoader("../../../Topology/topology.txt", Encoding.UTF8, new TopologyParser());
             rpcClient = new RpcClient(toplogyLoader, new TimeoutSettings(500));
 
-            instance = rpcClient.GetService<IProcessGoodDetail.IGoodManager>();
+            while (true) {
 
-            int testCount = 10000;
-            Task[] tsks = new Task[testCount];
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
 
-            for (int i = 0; i < tsks.Length; i++)
-            {
+                instance = rpcClient.GetService<IProcessGoodDetail.IGoodManager>();
 
-                tsks[i] = Task.Factory.StartNew(() => { RunTestData(); });
-                //tsks[i] = Task.Factory.StartNew(() => { RunTestHttpData(); });
+                int testCount = 10000;
+                Task[] tsks = new Task[testCount];
 
+                for (int i = 0; i < tsks.Length; i++)
+                {
+
+                    tsks[i] = Task.Factory.StartNew(() => { RunTestData(); });
+                    //tsks[i] = Task.Factory.StartNew(() => { RunTestHttpData(); });
+
+                }
+
+                Task.WaitAll(tsks);
+
+                //for (int i = 0; i < testCount; i++)
+                //{
+
+                //    RunTestData();
+                //}
+
+                sw.Stop();
+
+
+
+                Console.WriteLine(string.Format("耗时:{0} ms success:{1}  fail:{2}", sw.ElapsedMilliseconds, successCount, failCount));
+
+                ConsoleKeyInfo keyInfo = Console.ReadKey();
+
+                if (keyInfo.Key == ConsoleKey.Enter)
+                    break;
+
+                Thread.Sleep(1000);
             }
 
-            Task.WaitAll(tsks);
-
-            //for (int i = 0; i < testCount; i++)
-            //{
-
-            //    RunTestData();
-            //}
-
-            sw.Stop();
             
-            Console.WriteLine(string.Format("耗时:{0} ms success:{1}  fail:{2}", sw.ElapsedMilliseconds,successCount,failCount));
             Console.ReadKey();
+        }
+
+        private static void Run() {
+
+            while (true) {
+
+                Console.WriteLine("finished:{0},sucess:{1},fail:{2}", successCount + failCount, successCount, failCount);
+
+                Thread.Sleep(6000);
+            }
         }
 
         private static void RunTestData() {

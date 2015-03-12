@@ -12,13 +12,7 @@ using TcpFramework.Common;
 namespace TcpFramework.Server
 {
     public class SocketListener
-    {
-        public int maxConcurrentConnectOpCount = 0;
-        public int maxConcurrentRecSendCount = 0;
-
-        public int concurrentConnectOpCount = 0;
-        public int concurrentRecSendCount = 0;
-
+    {       
         private int receivePrefixLength = 0;
         private int bufferSize = 0;
         private Func<byte[], byte[]> dataProcessor;
@@ -31,6 +25,7 @@ namespace TcpFramework.Server
         private ConcurrentDictionary<int, SocketAsyncEventArgs> dictOnlineIdlebyHeartBeatSAEA = new ConcurrentDictionary<int, SocketAsyncEventArgs>();
         
         private Thread thCheckHeartBeatSAEA;
+        private SimplePerformanceCounter simplePerf;
 
         
         private BufferManager bufferManager;
@@ -41,18 +36,16 @@ namespace TcpFramework.Server
         SocketAsyncEventArgPool poolOfRecSendEventArgs;
 
         public SocketListener(Func<byte[], byte[]> dataProcessor) {
-
-            this.supportKeepAlive = true;
+            
             this.dataProcessor = dataProcessor;
 
             ServerSetting setting = ReadConfigFile.GetServerSetting();
 
             this.receivePrefixLength = setting.receivePrefixLength;
             this.bufferSize = setting.bufferSize;
+            this.supportKeepAlive = setting.useKeepAlive;
 
-            this.bufferManager = new BufferManager(setting.bufferSize * setting.numberOfSaeaForRecSend * setting.opsToPreAllocate, setting.bufferSize * setting.opsToPreAllocate);
-            //this.poolOfAcceptEventArgs = new SocketAsyncEventArgPool(setting.maxSimultaneousConnectOps);
-            //this.poolOfRecSendEventArgs = new SocketAsyncEventArgPool(setting.numberOfSaeaForRecSend);
+            this.bufferManager = new BufferManager(setting.bufferSize * setting.numberOfSaeaForRecSend * setting.opsToPreAllocate, setting.bufferSize * setting.opsToPreAllocate);            
             this.poolOfAcceptEventArgs = new SocketAsyncEventArgPool();
             this.poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
             this.maxConcurrentConnection = new Semaphore(setting.numberOfSaeaForRecSend, setting.numberOfSaeaForRecSend);
@@ -65,7 +58,7 @@ namespace TcpFramework.Server
         {
             listenSocket = new Socket(serverSetting.localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             listenSocket.Bind(serverSetting.localEndPoint);
-            listenSocket.Listen(100000);
+            listenSocket.Listen(1000000);
 
             StartAccept();
         }
@@ -100,13 +93,14 @@ namespace TcpFramework.Server
                 this.poolOfRecSendEventArgs.Push(eventArgObjectForPool);
             }
 
+            simplePerf = new SimplePerformanceCounter(true);
+
             if (supportKeepAlive) {
 
+                Console.WriteLine("support keepalive!");
                 thCheckHeartBeatSAEA = new Thread(new ThreadStart(RunCheckLongTimeIdleSAEA));
                 thCheckHeartBeatSAEA.IsBackground = true;
-                thCheckHeartBeatSAEA.Start();
-
-                //LogManager.Log("th start!");
+                thCheckHeartBeatSAEA.Start();                
             }
 
         }
@@ -122,13 +116,9 @@ namespace TcpFramework.Server
                 HandleBadAccept(acceptEventArgs);
 
                 return;
-            }
+            }            
 
-            int numberOfConnectedSockets = Interlocked.Increment(ref this.concurrentConnectOpCount);
-            if (numberOfConnectedSockets > this.maxConcurrentConnectOpCount)
-            {
-                this.maxConcurrentConnectOpCount = numberOfConnectedSockets;
-            }
+            simplePerf.PerfConcurrentServerConnectionCounter.Increment();
            
             LoopToStartAccept();
 
@@ -143,12 +133,7 @@ namespace TcpFramework.Server
             userToken.CreateNewServerSession(receiveSendEventArgs);
 
             acceptEventArgs.AcceptSocket = null;
-            this.poolOfAcceptEventArgs.Push(acceptEventArgs);
-
-            Interlocked.Decrement(ref this.concurrentConnectOpCount);
-            int numberOfRecSendCount = Interlocked.Increment(ref this.concurrentRecSendCount);
-            if (numberOfRecSendCount > maxConcurrentRecSendCount)
-                this.maxConcurrentRecSendCount = numberOfRecSendCount;                        
+            this.poolOfAcceptEventArgs.Push(acceptEventArgs);                                 
 
             StartReceive(receiveSendEventArgs);
         }
@@ -416,9 +401,7 @@ namespace TcpFramework.Server
             // to be used by another client. This 
             this.poolOfRecSendEventArgs.Push(e);
 
-            // decrement the counter keeping track of the total number of clients 
-            //connected to the server, for testing
-            Interlocked.Decrement(ref this.concurrentRecSendCount);
+            simplePerf.PerfConcurrentServerConnectionCounter.Decrement();
 
             //Release Semaphore so that its connection counter will be decremented.
             //This must be done AFTER putting the SocketAsyncEventArg back into the pool,
@@ -438,6 +421,7 @@ namespace TcpFramework.Server
             {
                 //Console.WriteLine(string.Format("heartbeat saea already exist!{0}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint));
                 StartReceive(receiveSendEventArgs);
+                simplePerf.PerfHeartBeatStatusServerConnectionCounter.Increment();
                 return;
             }
 
@@ -447,11 +431,13 @@ namespace TcpFramework.Server
             {
                 //Console.WriteLine(string.Format("try add heartbeat saea successfully!{0}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint));
                 StartReceive(receiveSendEventArgs);
+                simplePerf.PerfHeartBeatStatusServerConnectionCounter.Increment();
             }
             else
             {
                 //Console.WriteLine(string.Format("try add heartbeat saea falied then we close it!{0}", receiveSendEventArgs.AcceptSocket.RemoteEndPoint));
                 CloseClientSocket(receiveSendEventArgs);
+                simplePerf.PerfHeartBeatStatusServerConnectionCounter.Decrement();
             }            
         }
 
@@ -470,7 +456,9 @@ namespace TcpFramework.Server
                 if (userToken.serverSession.OnHeartBeatStatus) {
 
                     if (DateTime.Now.Subtract(userToken.serverSession.CreateSessionTime).TotalSeconds > 60)
-                        listLongTimeIdleSessionId.Add(sessionId);
+                    {
+                        listLongTimeIdleSessionId.Add(sessionId);                        
+                    }
                 }
             }            
 

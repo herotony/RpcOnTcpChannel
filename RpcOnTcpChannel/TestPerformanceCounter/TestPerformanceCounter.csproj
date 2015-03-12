@@ -52,6 +52,10 @@
       <Project>{1c684a02-a7cf-4bc8-9339-54554e4fe8e2}</Project>
       <Name>CustomPerformanceCounter</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TcpFramework\TcpFramework.csproj">
+      <Project>{dd8e417f-2db1-4a79-b2dd-035bada6f8cf}</Project>
+      <Name>TcpFramework</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

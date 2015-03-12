@@ -6,3 +6,6 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\C
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Debug\TestPerformanceCounter.csprojResolveAssemblyReference.cache
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Debug\TestPerformanceCounter.exe
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Debug\TestPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\TcpFramework.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\log4net.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Debug\TcpFramework.pdb

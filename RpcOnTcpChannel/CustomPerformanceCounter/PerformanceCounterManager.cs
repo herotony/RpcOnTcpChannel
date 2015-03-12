@@ -16,6 +16,10 @@ namespace CustomPerformanceCounter
         public PerformanceCounterManager(string categoryName) {
 
             this.categoryName = categoryName;
+
+            if (string.IsNullOrEmpty(this.categoryName))
+                throw new ArgumentException("categoryName cannot be Empty");
+
             if (PerformanceCounterCategory.Exists(categoryName))
             {
                 PerformanceCounterCategory.Delete(categoryName);
@@ -33,7 +37,7 @@ namespace CustomPerformanceCounter
                     AddSimplePerformanceCounter(counterName,"", dictCounterInfo[counterName]);
                 }
 
-                PerformanceCounterCategory.Create(categoryName, "", PerformanceCounterCategoryType.SingleInstance, counterCollection);
+                PerformanceCounterCategory.Create(categoryName, "", PerformanceCounterCategoryType.MultiInstance, counterCollection);
 
                 return true;
             }

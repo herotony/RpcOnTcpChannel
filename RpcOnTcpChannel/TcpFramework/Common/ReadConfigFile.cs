@@ -25,6 +25,7 @@ namespace TcpFramework.Common
         private static int maxDataSocketCount = 0;
         private static int bufferSize = 0;
         private static int timeOutByMS = 0;
+        private static bool useKeepAlive = true;
         private static int numberSendCountPerConnection = 1;        
 
         static ReadConfigFile() {            
@@ -72,7 +73,7 @@ namespace TcpFramework.Common
 
         internal static ClientSetting GetClientSetting() {
 
-            int shouldBingoCount = 5;
+            int shouldBingoCount = 6;
             int actualBingoCount = 0;
 
             Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting();
@@ -122,6 +123,13 @@ namespace TcpFramework.Common
                         return null;
 
                     actualBingoCount++;
+                }
+                else if (lowerKey.StartsWith("keepalive")) {
+
+                    if (!bool.TryParse(value, out useKeepAlive))
+                        return null;
+
+                    actualBingoCount++;
                 }               
 
             }
@@ -137,7 +145,7 @@ namespace TcpFramework.Common
 
         internal static ServerSetting GetServerSetting()
         {
-            int shouldBingoCount = 4;
+            int shouldBingoCount = 5;
             int actualBingoCount = 0;
 
             Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting();
@@ -180,8 +188,14 @@ namespace TcpFramework.Common
                         return null;
 
                     actualBingoCount++;
-                }               
+                }
+                else if (lowerKey.StartsWith("keepalive")) {
 
+                    if (!bool.TryParse(value, out useKeepAlive))
+                        return null;
+
+                    actualBingoCount++;
+                }              
             }
 
             if (actualBingoCount.Equals(shouldBingoCount))

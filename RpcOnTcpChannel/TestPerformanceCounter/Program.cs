@@ -5,14 +5,13 @@ using System.Text;
 using System.Threading;
 using System.Diagnostics;
 
-
+using TcpFramework.Common;
 
 namespace TestPerformanceCounter
 {
     class Program
     {
-        private static CustomPerformanceCounter.PerformanceCounterManager pfm = new CustomPerformanceCounter.PerformanceCounterManager("tcpframework_clientsocketprocessor");
-      
+              
         static void Main(string[] args)
         {
             RegisterPerfOfTimePerIO();        
@@ -22,10 +21,16 @@ namespace TestPerformanceCounter
 
         private static void RegisterPerfOfTimePerIO() {
 
+            SimplePerformanceCounter simplePerf = new SimplePerformanceCounter();
+
+            CustomPerformanceCounter.PerformanceCounterManager pfm = new CustomPerformanceCounter.PerformanceCounterManager(simplePerf.CategoryName);
+
             Dictionary<string, PerformanceCounterType> dictPerfInfo = new Dictionary<string, PerformanceCounterType>();
 
-            dictPerfInfo.Add("Consume Second/Per IO_Complete", PerformanceCounterType.AverageTimer32);
-            dictPerfInfo.Add("Total IO_Complete", PerformanceCounterType.AverageBase);
+            dictPerfInfo.Add(simplePerf.ClientConcurrentConnectionCounterName, PerformanceCounterType.NumberOfItems32);
+            dictPerfInfo.Add(simplePerf.ClientHeartBeatConnectionCounterName, PerformanceCounterType.NumberOfItems32);
+            dictPerfInfo.Add(simplePerf.ServerConcurrentConnectionCounterName, PerformanceCounterType.NumberOfItems32);
+            dictPerfInfo.Add(simplePerf.ServerHeartBeatConnectionCounterName, PerformanceCounterType.NumberOfItems32);
 
             bool result = pfm.CreatePerformanceCounter(dictPerfInfo);
 

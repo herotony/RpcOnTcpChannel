@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 using log4net;
 using TcpFramework.Server;
@@ -25,9 +26,9 @@ namespace TestServerForTcpFramework
             string inputdata = Encoding.UTF8.GetString(input);
 
             //log.Info(inputdata);
+            
 
-            string result = string.Format("date:{0} - {1}", DateTime.Now, inputdata);
-
+            string result = string.Format("date:{0} - {1}", DateTime.Now, inputdata);            
 
             return Encoding.UTF8.GetBytes(result);
         }

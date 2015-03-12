@@ -57,6 +57,7 @@
     <Compile Include="Common\MessageHandler.cs" />
     <Compile Include="Common\PrefixHandler.cs" />
     <Compile Include="Common\ReadConfigFile.cs" />
+    <Compile Include="Common\SimplePerformanceCounter.cs" />
     <Compile Include="Common\SocketAsyncEventArgPool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\MessagePreparer.cs" />

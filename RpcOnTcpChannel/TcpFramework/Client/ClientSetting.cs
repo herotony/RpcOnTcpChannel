@@ -34,7 +34,9 @@ namespace TcpFramework.Client
 		//可考虑大并发时，一个连接发用于送多条请求消息后再关闭...
 		internal int numberOfMessagesPerConnection;
 
-        public ClientSetting(IPEndPoint theServerEndPoint, int numberOfMessagesPerConnection, int maxSimultaneousConnectOps, int theMaxConnections, int bufferSize = 128, int receivePrefixLength = 4, int sendPrefixLength = 4, int opsToPreAlloc = 2, int timeOut = 1000)
+        internal bool useKeepAlive { get; private set; }
+
+        public ClientSetting(IPEndPoint theServerEndPoint, int numberOfMessagesPerConnection, int maxSimultaneousConnectOps, int theMaxConnections, int bufferSize = 128, int receivePrefixLength = 4, int sendPrefixLength = 4, int opsToPreAlloc = 2, int timeOut = 1000,bool useKeepAlive = true)
 		{
             this.serverEndPoint = theServerEndPoint;
 
@@ -45,6 +47,7 @@ namespace TcpFramework.Client
 
             this.timeOutByMS = timeOut;
             this.bufferSize = bufferSize;
+            this.useKeepAlive = useKeepAlive;
 
             //下面这些都应该是默认值，永不修改！
 			this.receivePrefixLength = receivePrefixLength;			

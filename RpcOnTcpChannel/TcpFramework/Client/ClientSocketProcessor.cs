@@ -14,53 +14,31 @@ namespace TcpFramework.Client
 {
     internal class ClientSocketProcessor
     {        
-        public event EventHandler<ReceiveFeedbackDataCompleteEventArg> ReceiveFeedbackDataComplete;
-        
-        #region 统计数据
-
-        //运行以来的最大并发值
-        internal int maxConnectOpCountEver = 0;
-        internal int maxConnectRecSendCountEver = 0;
-
-        //当前并发值
-        internal int currentConnectOpCount = 0;
-        internal int currentRecSendCount = 0;       
-
-        #endregion              
+        public event EventHandler<ReceiveFeedbackDataCompleteEventArg> ReceiveFeedbackDataComplete;                       
 
         private bool supportKeepAlive = false;
         private SocketAsyncEventArgPool poolOfHeartBeatRecSendEventArgs;
         private Thread thHeartBeat;
-        
 
+        private SimplePerformanceCounter simplePerf;
         private SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private SocketAsyncEventArgPool poolOfConnectEventArgs;   
            
 
         //允许的最大并发连接数
-        private Semaphore maxConcurrentConnection;
-
-        int concurrentCount = 0;
-        bool locked = false;
+        private Semaphore maxConcurrentConnection;                
 
         //每个连接最多能发送的消息数量，一般为一次一条
         private int numberMessagesOfPerConnection;
         //一般为整型int的四个字节
         private int prefixHandleLength;
         private int bufferSize;
-
-        private void StatisticAvarageRunTime(PerformanceCounter pRunCounter,PerformanceCounter pBaseCounter) {
-
-            pRunCounter.RawValue = Stopwatch.GetTimestamp();
-            pBaseCounter.Increment();
-        }
-      
+             
         public ClientSocketProcessor(SocketAsyncEventArgPool connectPool, SocketAsyncEventArgPool recSendPool, int maxRecSendConnection, int bufferSize, int numberMessageOfPerConnection, int prefixHandleLength,bool supportKeepAlive = false) {
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
-
-            Console.WriteLine("concurrent number:{0}", maxRecSendConnection);
+            this.simplePerf = new SimplePerformanceCounter(true);            
 
             this.maxConcurrentConnection = new Semaphore(maxRecSendConnection, maxRecSendConnection);
 
@@ -70,7 +48,9 @@ namespace TcpFramework.Client
 
             this.supportKeepAlive = supportKeepAlive;
 
-            this.supportKeepAlive = true;
+            Console.WriteLine("keepalive:{0}", supportKeepAlive);
+            Console.ReadKey();
+            
             if (this.supportKeepAlive)
             {
                 poolOfHeartBeatRecSendEventArgs = new SocketAsyncEventArgPool();
@@ -78,50 +58,17 @@ namespace TcpFramework.Client
                 thHeartBeat.IsBackground = true;
                 thHeartBeat.Start();
             }
-        }              
-
-        private void DebugInfo(string functionName) {
-
-            if(locked)
-                Console.WriteLine(string.Format("wait on {0} [thid:{1}] currentConnectOpCount:{2} currentRecSendCount:{3} maxConnectOpCountEver:{4} maxConnectRecSendCountEver:{5} ", Thread.CurrentThread.ManagedThreadId, functionName,currentConnectOpCount,currentRecSendCount,maxConnectOpCountEver,maxConnectRecSendCountEver));
-        }
+        }                      
 
         internal void SendMessage(List<Message> messages, IPEndPoint serverEndPoint)
-        {
-            //允许最大的并发传输数量为maxRecSendConnection，否则处于等待！
-            if (concurrentCount.Equals(26))
-                locked = true;
-            else
-                locked = false;
-
+        {           
             if (supportKeepAlive) {
 
                 if (ReuseHeartBeatSAEA(messages))
-                    return;
+                    return;                
             }           
-
-            bool permitIncoming = maxConcurrentConnection.WaitOne();
-
-            if (!permitIncoming) {
-
-                if (ReceiveFeedbackDataComplete != null)
-                {
-                    for (int i = 0; i < messages.Count; i++) {
-
-                        ReceiveFeedbackDataCompleteEventArg e = new ReceiveFeedbackDataCompleteEventArg();
-                        e.MessageTokenId = messages[i].TokenId;
-                        e.FeedbackData = null;
-
-                        ReceiveFeedbackDataComplete(this, e);
-                    }                    
-                }
-
-                this.maxConcurrentConnection.Release();
-                return;
-            }
-          
-            Interlocked.Increment(ref concurrentCount);
-            DebugInfo("SendMessage");
+            
+            maxConcurrentConnection.WaitOne();                              
 
             SocketAsyncEventArgs connectEventArgs = this.poolOfConnectEventArgs.Pop();
 
@@ -139,20 +86,10 @@ namespace TcpFramework.Client
             {
                 ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
                 theConnectingToken.ArrayOfMessageReadyToSend = messages;
-            }
-
-            DebugInfo("SendMessage2");
+            }            
 
             StartConnect(connectEventArgs, serverEndPoint);
-        }
-
-        internal int GetReuseSAEA() {
-
-            if (!supportKeepAlive)
-                return 0;
-            else
-                return poolOfHeartBeatRecSendEventArgs.Count;
-        }
+        }        
 
         private bool ReuseHeartBeatSAEA(List<Message> messages) {
 
@@ -160,6 +97,8 @@ namespace TcpFramework.Client
 
             if (arg == null)
                 return false;
+
+            simplePerf.PerfHeartBeatStatusClientConnectionCounter.Decrement();
 
             ClientUserToken userToken = (ClientUserToken)arg.UserToken;
             userToken.CreateNewSendDataHolder();
@@ -175,9 +114,7 @@ namespace TcpFramework.Client
         }
 
         internal void IO_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            DebugInfo("IO_Complete");
-
+        {            
             // determine which type of operation just completed and call the associated handler
             switch (e.LastOperation)
             {
@@ -209,8 +146,8 @@ namespace TcpFramework.Client
                             ReceiveFeedbackDataComplete(receiveSendToken.messageTokenId, null);
                         }
 
-                        this.maxConcurrentConnection.Release();
-                        Interlocked.Decrement(ref concurrentCount);
+                        this.maxConcurrentConnection.Release();   
+                     
                         LogManager.Log(string.Empty, new ArgumentException("\r\nError in I/O Completed, LastOperation: " + e.LastOperation));
                     }
                     break;
@@ -218,9 +155,7 @@ namespace TcpFramework.Client
         }
 
         private void ProcessReceive(SocketAsyncEventArgs receiveSendEventArgs)
-        {
-            DebugInfo("ProcessReceive");
-
+        {            
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
             
             if (receiveSendEventArgs.SocketError != SocketError.Success)
@@ -319,13 +254,14 @@ namespace TcpFramework.Client
 
             //加入support keepalive机制处理逻辑    
             userToken.startTime = DateTime.Now;
-            poolOfHeartBeatRecSendEventArgs.Push(e);                     
+            poolOfHeartBeatRecSendEventArgs.Push(e);
+            simplePerf.PerfHeartBeatStatusClientConnectionCounter.Increment();    
         }
 
         private void RunHeartBeat() {
 
             while (true) {
-
+                
                 SocketAsyncEventArgs heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
                 List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
                 List<SocketAsyncEventArgs> listHeartBeat = new List<SocketAsyncEventArgs>();                                              
@@ -358,7 +294,7 @@ namespace TcpFramework.Client
                 //Console.WriteLine("heartbeat saea count:{0}", listHeartBeat.Count);
 
                 for (int i = 0; i < listHeartBeat.Count; i++)
-                {
+                {                    
                     MessagePreparer.GetHeartBeatDataToSend(listHeartBeat[i]);
                     StartSend(listHeartBeat[i]);
                     //Console.WriteLine("{0} send heartbeat start send", listHeartBeat[i].AcceptSocket.LocalEndPoint);
@@ -369,9 +305,7 @@ namespace TcpFramework.Client
         }
 
         private void StartReceive(SocketAsyncEventArgs receiveSendEventArgs)
-        {
-            DebugInfo("StartReceive");
-
+        {            
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
             
             receiveSendEventArgs.SetBuffer(receiveSendToken.bufferOffsetReceive, this.bufferSize);
@@ -385,8 +319,7 @@ namespace TcpFramework.Client
         }
 
         private void ProcessSend(SocketAsyncEventArgs receiveSendEventArgs)
-        {
-            DebugInfo("ProcessSend");
+        {            
 
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
@@ -450,9 +383,7 @@ namespace TcpFramework.Client
         }   
 
         private void StartSend(SocketAsyncEventArgs receiveSendEventArgs)
-        {
-            DebugInfo("StartSend");
-
+        {            
             ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
             if (receiveSendToken.sendBytesRemainingCount <= this.bufferSize)
@@ -483,13 +414,9 @@ namespace TcpFramework.Client
         }
 
         private void ProcessConnect(SocketAsyncEventArgs connectEventArgs)
-        {
-            DebugInfo("ProcessConnect"); 
-
+        {            
             ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
-
-            Interlocked.Decrement(ref currentConnectOpCount);
-
+            
             if (connectEventArgs.SocketError == SocketError.Success)
             {
                 SocketAsyncEventArgs receiveSendEventArgs = poolOfRecSendEventArgs.Pop();
@@ -501,6 +428,8 @@ namespace TcpFramework.Client
                     return;
                 }
 
+                simplePerf.PerfConcurrentClientConnectionCounter.Increment();
+
                 receiveSendEventArgs.AcceptSocket = connectEventArgs.AcceptSocket;
 
                 ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
@@ -511,11 +440,7 @@ namespace TcpFramework.Client
 
                 receiveSendToken.startTime = theConnectingToken.ArrayOfMessageReadyToSend[0].StartTime;
                                
-                StartSend(receiveSendEventArgs);
-
-                Interlocked.Increment(ref currentRecSendCount);
-                if (currentRecSendCount > maxConnectRecSendCountEver)
-                    maxConnectRecSendCountEver = currentRecSendCount;
+                StartSend(receiveSendEventArgs);               
 
                 //release connectEventArgs object back to the pool.
                 connectEventArgs.AcceptSocket = null;
@@ -527,13 +452,7 @@ namespace TcpFramework.Client
                 ProcessConnectionError(connectEventArgs);
             }
         }
-
-        private bool ProcessSendOnConnectedSAEA() {
-
-
-            return false;
-        }
-
+        
         private void CloseSocket(Socket theSocket)
         {
             try
@@ -547,11 +466,9 @@ namespace TcpFramework.Client
         }
 
         private void ProcessConnectionError(SocketAsyncEventArgs connectEventArgs)
-        {
-            DebugInfo("ProcessConnectionError");
+        {            
             try
             {                
-
                 ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;               
 
                 // If connection was refused by server or timed out or not reachable, then we'll keep this socket.
@@ -584,8 +501,7 @@ namespace TcpFramework.Client
             }
             finally
             {
-                this.maxConcurrentConnection.Release();
-                Interlocked.Decrement(ref concurrentCount);
+                this.maxConcurrentConnection.Release();                
             }
         }
 
@@ -596,11 +512,7 @@ namespace TcpFramework.Client
                 ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
 
                 connectEventArgs.RemoteEndPoint = serverEndPoint;
-                connectEventArgs.AcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-                Interlocked.Increment(ref currentConnectOpCount);
-                if (currentConnectOpCount > maxConnectOpCountEver)
-                    maxConnectOpCountEver = currentConnectOpCount;                
+                connectEventArgs.AcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);                            
 
                 bool willRaiseEvent = connectEventArgs.AcceptSocket.ConnectAsync(connectEventArgs);
                 if (!willRaiseEvent)
@@ -611,18 +523,12 @@ namespace TcpFramework.Client
             catch (Exception startConnectErr) {
 
                 this.maxConcurrentConnection.Release();
-                LogManager.Log("StartConnect", startConnectErr);
-                
-            }
-            
+                LogManager.Log("StartConnect", startConnectErr);                
+            }            
         }
 
         private void StartDisconnect(SocketAsyncEventArgs receiveSendEventArgs)
-        {
-            DebugInfo("StartDisconnect");
-
-            Interlocked.Decrement(ref currentRecSendCount);            
-
+        {                     
             try {
                 
                 receiveSendEventArgs.AcceptSocket.Shutdown(SocketShutdown.Both);               
@@ -637,11 +543,9 @@ namespace TcpFramework.Client
         }
 
         private void ProcessDisconnectAndCloseSocket(SocketAsyncEventArgs receiveSendEventArgs)
-        {
-            DebugInfo("ProcessDisconnect");
+        {            
             try
             {               
-
                 ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
                 //This method closes the socket and releases all resources, both
@@ -661,7 +565,7 @@ namespace TcpFramework.Client
             finally
             {
                 this.maxConcurrentConnection.Release();
-                Interlocked.Decrement(ref concurrentCount);
+                simplePerf.PerfConcurrentClientConnectionCounter.Decrement();
             }
         }
 

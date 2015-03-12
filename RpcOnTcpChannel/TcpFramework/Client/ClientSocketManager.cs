@@ -61,7 +61,7 @@ namespace TcpFramework.Client
             poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
 
             //实际负责处理相关传输数据的关键核心类
-            processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.maxSimultaneousConnectOps, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength);
+            processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength,clientSetting.useKeepAlive);
 
             //由于不涉及buffermanager，可动态增长
             for (int i = 0; i < clientSetting.maxSimultaneousConnectOps; i++)
@@ -140,12 +140,7 @@ namespace TcpFramework.Client
             }
            
             return null;
-        }
-
-        public static int GetReuseSAEA() {
-
-            return processor.GetReuseSAEA();
-        }
+        }      
 
         private void Processor_ReceiveFeedbackDataComplete(object sender, ReceiveFeedbackDataCompleteEventArg e) {
 

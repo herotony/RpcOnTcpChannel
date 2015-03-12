@@ -1,4 +1,6 @@
-﻿hostinfo:127.0.0.1|6969
+﻿//hostinfo:127.0.0.1|6969
+hostinfo:any|9160
 connectsocket_count:30
 datasocket_count:100
 buffersize:1024
+keepalive:true

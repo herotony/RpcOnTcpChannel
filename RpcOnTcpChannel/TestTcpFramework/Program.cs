@@ -98,15 +98,18 @@ namespace TestTcpFramework
 
                 sw.Stop();
 
-                totalLoopcount++;
-                
-                 ClientSocketManager smgr2 = new ClientSocketManager();                 
+                totalLoopcount++;                                             
 
                 log.Info(string.Format("共耗时:{0}毫秒,ok:{1},fail:{2} loop:{3}", sw.ElapsedMilliseconds, successCount, faileCount,totalLoopcount));
 
+                ConsoleKeyInfo keyInfo = Console.ReadKey();
+
+                if (keyInfo.Key == ConsoleKey.Enter)
+                    break;
+
                 Thread.Sleep(100);
 
-                break;
+                //break;
 
             }                       
 

@@ -55,7 +55,9 @@ namespace TcpFramework.Client
 
             Buffer.BlockCopy(arrayOfBytesInPrefix, 0, theUserToken.dataToSend, 0, theUserToken.sendPrefixLength);
             theUserToken.sendBytesRemainingCount = theUserToken.sendPrefixLength;
-            theUserToken.bytesSentAlreadyCount = 0;            
+            theUserToken.bytesSentAlreadyCount = 0;     
+       
+          
         }
 
     }

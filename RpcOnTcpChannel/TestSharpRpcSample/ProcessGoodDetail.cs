@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 using IProcessGoodDetail;
 
@@ -20,6 +21,8 @@ namespace TestSharpRpcSample
             }
 
             sbGoodIds.Append(DateTime.Now.Ticks.ToString());
+
+            Thread.Sleep(50);
 
             return string.Format("ret:ids({0} on city:{1} with coord:[lat:{2},lng{3}] rand:{4})", sbGoodIds.ToString(), cityName, lat, lng, new Random().Next(100000));
         }
