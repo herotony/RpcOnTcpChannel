@@ -269,9 +269,11 @@ namespace TcpFramework.Client
                 while (heartBeatSAEA != null)
                 {
                     ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
+                    
+                    //发一次心跳，成功发送后可直接关闭，说明太闲了(完全空闲两分钟了!一直没被Pop出去复用)
+                    if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds > 120) {
 
-                    if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds > 10) {
-                        
+                        //Console.WriteLine("close {0} [starttime:{1}]", heartBeatSAEA.AcceptSocket.LocalEndPoint, userToken.startTime);
                         listHeartBeat.Add(heartBeatSAEA);                        
 
                     } else {
@@ -279,28 +281,27 @@ namespace TcpFramework.Client
                         listRepush.Add(heartBeatSAEA);
                     }
 
-                    //确保不影响并发复用
+                    //确保不影响并发复用，无论如何留一条复用...
                     if (poolOfConnectEventArgs.Count < 2)
                         break;
 
                     heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
-                }
-
-                //Console.WriteLine("repush heartbeat count:{0}", listRepush.Count);
+                }                
 
                 for (int i = 0; i < listRepush.Count; i++)
                     poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);
-
-                //Console.WriteLine("heartbeat saea count:{0}", listHeartBeat.Count);
+                
 
                 for (int i = 0; i < listHeartBeat.Count; i++)
                 {                    
                     MessagePreparer.GetHeartBeatDataToSend(listHeartBeat[i]);
                     StartSend(listHeartBeat[i]);
-                    //Console.WriteLine("{0} send heartbeat start send", listHeartBeat[i].AcceptSocket.LocalEndPoint);
-                }                
+                    simplePerf.PerfHeartBeatStatusClientConnectionCounter.Decrement();
+                }
 
-                Thread.Sleep(1000);
+                
+
+                Thread.Sleep(6000);
             }
         }
 
@@ -351,7 +352,9 @@ namespace TcpFramework.Client
                         }
                         else {
 
-                            SetToHeartBeatStatus(receiveSendEventArgs,receiveSendToken);
+                            //改为发送一次心跳后，关闭!
+                            receiveSendToken.Reset();
+                            StartDisconnect(receiveSendEventArgs);
                         }
                     }                   
                 }
@@ -365,20 +368,23 @@ namespace TcpFramework.Client
                 }
             }
             else
-            {                
+            {
+                bool isHeartBeat = receiveSendToken.sendDataHolder.OnHeartBeatStatus;
+          
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
 
-                // We'll just close the socket if there was a
-                // socket error when receiving data from the client.
-                if (ReceiveFeedbackDataComplete != null)
-                {
-                    ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
-                    arg.MessageTokenId = receiveSendToken.messageTokenId;
-                    arg.FeedbackData = null;
+                if (!isHeartBeat) {
 
-                    ReceiveFeedbackDataComplete(this, arg);
-                }            
+                    if (ReceiveFeedbackDataComplete != null)
+                    {
+                        ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
+                        arg.MessageTokenId = receiveSendToken.messageTokenId;
+                        arg.FeedbackData = null;
+
+                        ReceiveFeedbackDataComplete(this, arg);
+                    }      
+                }                                    
             }
         }   
 

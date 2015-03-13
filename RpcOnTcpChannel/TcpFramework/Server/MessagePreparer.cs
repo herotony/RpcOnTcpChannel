@@ -27,7 +27,8 @@ namespace TcpFramework.Server
             Buffer.BlockCopy(idByteArray, 0, userToken.dataToSend, userToken.sendPrefixLength, idByteArray.Length);
             Buffer.BlockCopy(sidByteArray, 0, userToken.dataToSend, userToken.sendPrefixLength + idByteArray.Length, sidByteArray.Length);
 
-            Buffer.BlockCopy(sendData, 0, userToken.dataToSend, userToken.sendPrefixLength + idByteArray.Length+sidByteArray.Length, sendData.Length);
+            if(sendData.Length>0)
+                Buffer.BlockCopy(sendData, 0, userToken.dataToSend, userToken.sendPrefixLength + idByteArray.Length+sidByteArray.Length, sendData.Length);
 
             userToken.sendBytesRemainingCount = userToken.sendPrefixLength + lengthOfCurrentFeedbackMessage;
             userToken.bytesSentAlreadyCount = 0;

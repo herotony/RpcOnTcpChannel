@@ -25,7 +25,7 @@ namespace TestTcpFramework
 
                 Console.WriteLine("start");
 
-                int testCount = 10000;
+                int testCount = 30000;
                 int faileCount = 0;
                 int successCount = 0;
 
@@ -102,12 +102,11 @@ namespace TestTcpFramework
 
                 log.Info(string.Format("共耗时:{0}毫秒,ok:{1},fail:{2} loop:{3}", sw.ElapsedMilliseconds, successCount, faileCount,totalLoopcount));
 
-                ConsoleKeyInfo keyInfo = Console.ReadKey();
+                //ConsoleKeyInfo keyInfo = Console.ReadKey();
+                //if (keyInfo.Key == ConsoleKey.Enter)
+                //    break;
 
-                if (keyInfo.Key == ConsoleKey.Enter)
-                    break;
-
-                Thread.Sleep(100);
+                Thread.Sleep(1000);
 
                 //break;
 
