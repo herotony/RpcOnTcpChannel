@@ -1,11 +1,11 @@
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\TestPerformanceCounter.exe.config
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\TestPerformanceCounter.exe
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\TestPerformanceCounter.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\CustomPerformanceCounter.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\TcpFramework.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\log4net.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\CustomPerformanceCounter.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\TcpFramework.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Release\TestPerformanceCounter.csprojResolveAssemblyReference.cache
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Release\TestPerformanceCounter.exe
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Release\TestPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\RegisterPerformanceCounter.exe.config
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\RegisterPerformanceCounter.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\bin\Release\RegisterPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Release\RegisterPerformanceCounter.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestPerformanceCounter\obj\Release\RegisterPerformanceCounter.pdb

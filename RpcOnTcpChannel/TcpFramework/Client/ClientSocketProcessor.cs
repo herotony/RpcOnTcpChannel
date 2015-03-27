@@ -46,10 +46,7 @@ namespace TcpFramework.Client
             this.numberMessagesOfPerConnection = numberMessageOfPerConnection;
             this.prefixHandleLength = prefixHandleLength;
 
-            this.supportKeepAlive = supportKeepAlive;
-
-            Console.WriteLine("keepalive:{0}", supportKeepAlive);
-            Console.ReadKey();
+            this.supportKeepAlive = supportKeepAlive;           
             
             if (this.supportKeepAlive)
             {
