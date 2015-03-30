@@ -38,7 +38,7 @@ namespace TcpFramework.Client
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
-            this.simplePerf = new SimplePerformanceCounter(true);            
+            this.simplePerf = new SimplePerformanceCounter(true,false);            
 
             this.maxConcurrentConnection = new Semaphore(maxRecSendConnection, maxRecSendConnection);
 
@@ -95,7 +95,9 @@ namespace TcpFramework.Client
             if (arg == null)
                 return false;
 
-            simplePerf.PerfHeartBeatStatusClientConnectionCounter.Decrement();
+            simplePerf.PerfClientReuseConnectionCounter.Increment();
+            Console.WriteLine("rawvalue:{0}",simplePerf.PerfClientReuseConnectionCounter.RawValue);
+            simplePerf.PerfClientIdleConnectionCounter.Decrement();
 
             ClientUserToken userToken = (ClientUserToken)arg.UserToken;
             userToken.CreateNewSendDataHolder();
@@ -251,52 +253,56 @@ namespace TcpFramework.Client
 
             //加入support keepalive机制处理逻辑    
             userToken.startTime = DateTime.Now;
-            poolOfHeartBeatRecSendEventArgs.Push(e);
-            simplePerf.PerfHeartBeatStatusClientConnectionCounter.Increment();    
+            if (!userToken.isReuseConnection)
+                userToken.isReuseConnection = true;
+            else
+            {                
+                simplePerf.PerfClientReuseConnectionCounter.Decrement();                
+            }
+
+            simplePerf.PerfClientIdleConnectionCounter.Increment();
+
+            poolOfHeartBeatRecSendEventArgs.Push(e);                          
         }
 
         private void RunHeartBeat() {
 
             while (true) {
-                
+
+                if (poolOfConnectEventArgs.Count < 3)
+                {
+                    //池里太少就不再清理所谓"空闲"连接了。
+                    Thread.Sleep(6000);
+                    continue;  
+                }
+
                 SocketAsyncEventArgs heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
-                List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
-                List<SocketAsyncEventArgs> listHeartBeat = new List<SocketAsyncEventArgs>();                                              
+                List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();                                                            
 
                 while (heartBeatSAEA != null)
                 {
                     ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
                     
                     //发一次心跳，成功发送后可直接关闭，说明太闲了(完全空闲两分钟了!一直没被Pop出去复用)
-                    if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds > 120) {
-
-                        //Console.WriteLine("close {0} [starttime:{1}]", heartBeatSAEA.AcceptSocket.LocalEndPoint, userToken.startTime);
-                        listHeartBeat.Add(heartBeatSAEA);                        
+                    if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120) {
+                                                                      
+                        listRepush.Add(heartBeatSAEA);
 
                     } else {
 
-                        listRepush.Add(heartBeatSAEA);
+                        //不用发所谓心跳，直接关闭
+                        StartDisconnect(heartBeatSAEA);
+                        simplePerf.PerfClientIdleConnectionCounter.Decrement();
                     }
 
-                    //确保不影响并发复用，无论如何留一条复用...
-                    if (poolOfConnectEventArgs.Count < 2)
+                    if (poolOfConnectEventArgs.Count < 3)
                         break;
 
                     heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
                 }                
 
                 for (int i = 0; i < listRepush.Count; i++)
-                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);
-                
-
-                for (int i = 0; i < listHeartBeat.Count; i++)
-                {                    
-                    MessagePreparer.GetHeartBeatDataToSend(listHeartBeat[i]);
-                    StartSend(listHeartBeat[i]);
-                    simplePerf.PerfHeartBeatStatusClientConnectionCounter.Decrement();
-                }
-
-                
+                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);                                          
 
                 Thread.Sleep(6000);
             }
@@ -557,6 +563,8 @@ namespace TcpFramework.Client
 
                 //create an object that we can write data to.
                 receiveSendToken.CreateNewSendDataHolder();
+
+                receiveSendToken.isReuseConnection = false;
 
                 // It is time to release this SAEA object.
                 this.poolOfRecSendEventArgs.Push(receiveSendEventArgs);                

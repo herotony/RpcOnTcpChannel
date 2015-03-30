@@ -10,12 +10,16 @@ namespace TcpFramework.Client
     internal class ClientUserToken : DataUserToken
     {
         internal SendDataHolder sendDataHolder;
+        internal bool isReuseConnection;
 
-        public ClientUserToken(int receiveOffset, int sendOffset, int receivePrefixLength, int sendPrefixLength) : base(receiveOffset, sendOffset, receivePrefixLength, sendPrefixLength) { }
+        public ClientUserToken(int receiveOffset, int sendOffset, int receivePrefixLength, int sendPrefixLength) : base(receiveOffset, sendOffset, receivePrefixLength, sendPrefixLength) {
+
+            isReuseConnection = false;
+        }
 
         internal void CreateNewSendDataHolder() {
 
-            this.sendDataHolder = new SendDataHolder();
+            this.sendDataHolder = new SendDataHolder();            
         }
     }
 }

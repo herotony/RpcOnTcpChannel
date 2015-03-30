@@ -88,7 +88,7 @@ namespace TcpFramework.Server
                 this.poolOfRecSendEventArgs.Push(eventArgObjectForPool);
             }
 
-            simplePerf = new SimplePerformanceCounter(true);           
+            simplePerf = new SimplePerformanceCounter(true,true);           
         }
 
         private void ProcessAccept(SocketAsyncEventArgs acceptEventArgs)
