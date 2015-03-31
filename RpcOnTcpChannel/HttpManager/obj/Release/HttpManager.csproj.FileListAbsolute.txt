@@ -5,3 +5,4 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Release\log4net.dl
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\obj\Release\HttpManager.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\obj\Release\HttpManager.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\obj\Release\HttpManager.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Release\TcpFramework.pdb
