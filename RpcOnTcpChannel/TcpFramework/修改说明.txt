@@ -27,4 +27,24 @@
 
 测试目前没问题，稳定在33个并发连接自动不再增长，处理了速度，每秒稳定在20000条，这是个基准。
 
+20140331：
+
+配置重要参数说明：
+client:
+
+   hostinfo
+   connectsocket_count:这个数没所谓，实际上随着运行是可动态增长的。高了低了问题不大。
+   datasocket_count:并发控制的就是这个数，注意调整(不同于服务端，其占用端口)，建议不超过1000，毕竟端口有限，还有其他服务要用的。
+   buffersize：字节为单位，实际涉及分配为此数的2倍(一个接收，一个发送)，乘以datasocket_count为最终占用内存大小
+   timeoutbyms(ms)
+   keepalive：一般为true啦，复用很重要！
+  
+server:
+
+   hostinfo
+   connectsocket_count:这个数没所谓，实际上随着运行是可动态增长的。高了低了问题不大。
+   datasocket_count:并发控制的就是这个数，注意调整，不同于客户端，服务端这个值可配置更大些，考虑内存足够(影响内存固定分配的大小，但不占端口)的话，越大越好！
+   buffersize：字节为单位，实际涉及分配为此数的2倍(一个接收，一个发送)，乘以datasocket_count为最终占用内存大小
+   keepalive：一般为true啦，复用很重要！
+
 

@@ -95,8 +95,7 @@ namespace TcpFramework.Client
             if (arg == null)
                 return false;
 
-            simplePerf.PerfClientReuseConnectionCounter.Increment();
-            Console.WriteLine("rawvalue:{0}",simplePerf.PerfClientReuseConnectionCounter.RawValue);
+            simplePerf.PerfClientReuseConnectionCounter.Increment();            
             simplePerf.PerfClientIdleConnectionCounter.Decrement();
 
             ClientUserToken userToken = (ClientUserToken)arg.UserToken;
@@ -272,7 +271,7 @@ namespace TcpFramework.Client
                 if (poolOfConnectEventArgs.Count < 3)
                 {
                     //池里太少就不再清理所谓"空闲"连接了。
-                    Thread.Sleep(6000);
+                    Thread.Sleep(10000);
                     continue;  
                 }
 
@@ -283,14 +282,14 @@ namespace TcpFramework.Client
                 {
                     ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
                     
-                    //发一次心跳，成功发送后可直接关闭，说明太闲了(完全空闲两分钟了!一直没被Pop出去复用)
+                    
                     if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120) {
                                                                       
                         listRepush.Add(heartBeatSAEA);
 
                     } else {
 
-                        //不用发所谓心跳，直接关闭
+                        //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
                         StartDisconnect(heartBeatSAEA);
                         simplePerf.PerfClientIdleConnectionCounter.Decrement();
                     }
@@ -304,7 +303,7 @@ namespace TcpFramework.Client
                 for (int i = 0; i < listRepush.Count; i++)
                     poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);                                          
 
-                Thread.Sleep(6000);
+                Thread.Sleep(10000);
             }
         }
 
