@@ -2,9 +2,9 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\topology.
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\SimpleHttpTestClient.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\SimpleHttpTestClient.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\IProcessGoodDetail.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\log4net.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\SharpRpc.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\TcpFramework.dll
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\log4net.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\IProcessGoodDetail.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\SharpRpc.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\SimpleHttpTestClient\bin\TcpFramework.pdb

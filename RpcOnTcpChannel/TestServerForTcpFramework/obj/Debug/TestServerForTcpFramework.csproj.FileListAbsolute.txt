@@ -1,3 +1,4 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\socketsetting.txt
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\TestServerForTcpFramework.exe.config
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\TestServerForTcpFramework.exe
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\TestServerForTcpFramework.pdb
@@ -7,4 +8,3 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debu
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.csprojResolveAssemblyReference.cache
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.exe
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.pdb
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\socketsetting.txt

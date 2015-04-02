@@ -24,9 +24,8 @@ namespace TcpFramework.Client
         private SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private SocketAsyncEventArgPool poolOfConnectEventArgs;   
            
-
         //允许的最大并发连接数
-        private Semaphore maxConcurrentConnection;                
+        private Semaphore maxConcurrentConnection;        
 
         //每个连接最多能发送的消息数量，一般为一次一条
         private int numberMessagesOfPerConnection;
@@ -90,25 +89,35 @@ namespace TcpFramework.Client
 
         private bool ReuseHeartBeatSAEA(List<Message> messages) {
 
-            SocketAsyncEventArgs arg = poolOfHeartBeatRecSendEventArgs.Pop();
+            try {                
 
-            if (arg == null)
-                return false;
+                SocketAsyncEventArgs arg = poolOfHeartBeatRecSendEventArgs.Pop();
 
-            simplePerf.PerfClientReuseConnectionCounter.Increment();            
-            simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                if (arg == null)
+                    return false;
 
-            ClientUserToken userToken = (ClientUserToken)arg.UserToken;
-            userToken.CreateNewSendDataHolder();
-            SendDataHolder sendDataHodler = userToken.sendDataHolder;
+                simplePerf.PerfClientReuseConnectionCounter.Increment();
+                simplePerf.PerfClientIdleConnectionCounter.Decrement();
 
-            sendDataHodler.SetSendMessage(messages);
-            MessagePreparer.GetDataToSend(arg);
-            sendDataHodler.ArrayOfMessageToSend[0].StartTime = DateTime.Now;
-           
-            StartSend(arg);            
+                ClientUserToken userToken = (ClientUserToken)arg.UserToken;
+                userToken.CreateNewSendDataHolder();
+                SendDataHolder sendDataHodler = userToken.sendDataHolder;
 
-            return true;
+                sendDataHodler.SetSendMessage(messages);
+                MessagePreparer.GetDataToSend(arg);
+                sendDataHodler.ArrayOfMessageToSend[0].StartTime = DateTime.Now;
+
+                StartSend(arg);
+
+                return true;
+
+            }
+            catch { }
+            finally {
+                
+            }
+
+            return false;
         }
 
         internal void IO_Completed(object sender, SocketAsyncEventArgs e)
@@ -266,12 +275,14 @@ namespace TcpFramework.Client
 
         private void RunHeartBeat() {
 
-            while (true) {
+            int waitTime = 180000;            
+
+            while (true) {                
 
                 if (poolOfConnectEventArgs.Count < 3)
                 {
                     //池里太少就不再清理所谓"空闲"连接了。
-                    Thread.Sleep(10000);
+                    Thread.Sleep(waitTime);
                     continue;  
                 }
 
@@ -281,8 +292,7 @@ namespace TcpFramework.Client
                 while (heartBeatSAEA != null)
                 {
                     ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
-                    
-                    
+                                        
                     if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120) {
                                                                       
                         listRepush.Add(heartBeatSAEA);
@@ -301,9 +311,9 @@ namespace TcpFramework.Client
                 }                
 
                 for (int i = 0; i < listRepush.Count; i++)
-                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);                                          
+                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);
 
-                Thread.Sleep(10000);
+                Thread.Sleep(waitTime);
             }
         }
 
@@ -334,31 +344,11 @@ namespace TcpFramework.Client
                 // operation will be required to send the data.
                 if (receiveSendToken.sendBytesRemainingCount == 0)
                 {
-                    if (!supportKeepAlive)
-                    {
-                        //incrementing count of messages sent on this connection                
-                        receiveSendToken.sendDataHolder.NumberOfMessageHadSent++;
+                    //incrementing count of messages sent on this connection                
+                    receiveSendToken.sendDataHolder.NumberOfMessageHadSent++;
 
-                        //准备接受返回数据
-                        StartReceive(receiveSendEventArgs);
-                    }
-                    else {
-
-                        if (!receiveSendToken.sendDataHolder.OnHeartBeatStatus)
-                        {
-                            //incrementing count of messages sent on this connection                
-                            receiveSendToken.sendDataHolder.NumberOfMessageHadSent++;
-
-                            //准备接受返回数据
-                            StartReceive(receiveSendEventArgs);
-                        }
-                        else {
-
-                            //改为发送一次心跳后，关闭!
-                            receiveSendToken.Reset();
-                            StartDisconnect(receiveSendEventArgs);
-                        }
-                    }                   
+                    //准备接受返回数据
+                    StartReceive(receiveSendEventArgs);                                
                 }
                 else
                 {
@@ -370,23 +360,18 @@ namespace TcpFramework.Client
                 }
             }
             else
-            {
-                bool isHeartBeat = receiveSendToken.sendDataHolder.OnHeartBeatStatus;
-          
+            {                          
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
 
-                if (!isHeartBeat) {
+                if (ReceiveFeedbackDataComplete != null)
+                {
+                    ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
+                    arg.MessageTokenId = receiveSendToken.messageTokenId;
+                    arg.FeedbackData = null;
 
-                    if (ReceiveFeedbackDataComplete != null)
-                    {
-                        ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
-                        arg.MessageTokenId = receiveSendToken.messageTokenId;
-                        arg.FeedbackData = null;
-
-                        ReceiveFeedbackDataComplete(this, arg);
-                    }      
-                }                                    
+                    ReceiveFeedbackDataComplete(this, arg);
+                }                                                    
             }
         }   
 
@@ -537,8 +522,7 @@ namespace TcpFramework.Client
 
         private void StartDisconnect(SocketAsyncEventArgs receiveSendEventArgs)
         {                     
-            try {
-                
+            try {                
                 receiveSendEventArgs.AcceptSocket.Shutdown(SocketShutdown.Both);               
             }
             catch { }            

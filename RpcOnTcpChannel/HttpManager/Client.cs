@@ -30,7 +30,10 @@ namespace HttpManager
 
             if (message.Equals("ok")) {
 
-                return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
+                if (retData != null && retData.Length > 8)
+                    return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
+                else
+                    return "failbynull";
             }
 
             return "fail";

@@ -1,6 +1,3 @@
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\obj\Debug\TestSharpRpcClient.csprojResolveAssemblyReference.cache
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\obj\Debug\TestSharpRpcClient.exe
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\obj\Debug\TestSharpRpcClient.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\TestSharpRpcClient.exe
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\TestSharpRpcClient.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\IProcessGoodDetail.dll
@@ -10,3 +7,6 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\log4n
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\IProcessGoodDetail.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\SharpRpc.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\bin\Debug\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\obj\Debug\TestSharpRpcClient.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\obj\Debug\TestSharpRpcClient.exe
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestSharpRpcClient\obj\Debug\TestSharpRpcClient.pdb

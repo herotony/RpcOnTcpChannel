@@ -15,7 +15,7 @@ namespace TcpFramework.Client
     public class ClientSocketManager
     {              
         private static int msgTokenId = 0;
-        private static int timeOutByMS = 1000;//超时设置，单位毫秒        
+        private static int timeOutByMS = 500;//超时设置，单位毫秒        
 
         //核心部分！
         private static BufferManager bufferManager;       
@@ -26,9 +26,7 @@ namespace TcpFramework.Client
         private static SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private static SocketAsyncEventArgPool poolOfConnectEventArgs;
 
-        private static  ClientSocketProcessor processor;
-
-        //private static Semaphore maxCurrentSignal = new Semaphore(10,10);
+        private static  ClientSocketProcessor processor;        
 
         public delegate byte[] PickResult(int tokenId);
 
@@ -107,9 +105,7 @@ namespace TcpFramework.Client
 
         public byte[] SendRequest(byte[] sendData, ref string message) {
 
-            try {
-
-                //maxCurrentSignal.WaitOne();
+            try {                
 
                 int _tokenId = GetNewTokenId();
 
@@ -132,11 +128,17 @@ namespace TcpFramework.Client
 
                 message = "timeout";                
             }
-            catch { }
-            finally {
+            catch(Exception sendErr) {
 
-               // maxCurrentSignal.Release();
-                processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;
+                message = "err:"+sendErr.Message + "\r\nstackTrace:" + sendErr.StackTrace;
+            }
+            finally {
+               
+                try
+                {
+                    processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;
+                }
+                finally { }                
             }
            
             return null;
@@ -147,13 +149,22 @@ namespace TcpFramework.Client
             if (!e.MessageTokenId.Equals(this.messageTokenId))
                 return;
 
-            if (e.FeedbackData != null && e.FeedbackData.Length > 0) {
+            try {
 
-                result = new byte[e.FeedbackData.Length];
-                Buffer.BlockCopy(e.FeedbackData, 0, result, 0, e.FeedbackData.Length);
+                if (e.FeedbackData != null && e.FeedbackData.Length > 0)
+                {
+                    result = new byte[e.FeedbackData.Length];
+                    Buffer.BlockCopy(e.FeedbackData, 0, result, 0, e.FeedbackData.Length);
+                }
             }
+            catch(Exception feedbackErr) {
 
-            manualResetEvent.Set();                   
+                LogManager.Log(string.Format("{0} occur error", e.MessageTokenId), feedbackErr);
+            }
+            finally {
+
+                manualResetEvent.Set();   
+            }                                       
         }                   
 
         private static int GetNewTokenId()
