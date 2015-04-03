@@ -220,20 +220,7 @@ namespace TcpFramework.Server
             {                
                 bool getLengthInfoSuccessfully = false;
 
-                remainingBytesToProcess = PrefixHandler.HandlePrefix(receiveSendEventArgs, receiveSendToken, remainingBytesToProcess,ref getLengthInfoSuccessfully);
-
-                //add by saosin on  20150311
-                if (getLengthInfoSuccessfully && supportKeepAlive) {
-                    
-                    if (receiveSendToken.lengthOfCurrentIncomingMessage.Equals(0)) {
-
-                        //客户端主动发送的心跳，那么就主动关闭这个socket                        
-                        receiveSendToken.Reset();
-                        CloseClientSocket(receiveSendEventArgs);
-
-                        return;
-                    }
-                }
+                remainingBytesToProcess = PrefixHandler.HandlePrefix(receiveSendEventArgs, receiveSendToken, remainingBytesToProcess,ref getLengthInfoSuccessfully);                
 
                 if (remainingBytesToProcess == 0)
                 {
@@ -264,17 +251,16 @@ namespace TcpFramework.Server
                     StartSend(receiveSendEventArgs);                  
                 }
                 else
-                {
+                {                    
                     if (!supportKeepAlive)
                     {
                         receiveSendToken.Reset();
                         CloseClientSocket(receiveSendEventArgs);
-                        return;
-                    }
+                        return;                        
+                    }                    
                     else {
-
-                        //just heartbeat for keepAlive
-                        //开始下次接收，不过理论上不该进入该逻辑，毕竟先前判断了内容是否为空！                        
+                               
+                        //只是个万全做法，不应该有此逻辑，即传输内容为空!
                         receiveSendToken.CreateNewServerSession(receiveSendEventArgs);
                         receiveSendToken.dataMessageReceived = null;
                         receiveSendToken.Reset();

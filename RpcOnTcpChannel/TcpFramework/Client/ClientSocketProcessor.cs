@@ -18,6 +18,7 @@ namespace TcpFramework.Client
 
         private bool supportKeepAlive = false;
         private SocketAsyncEventArgPool poolOfHeartBeatRecSendEventArgs;
+        private ManualResetEvent cleanSignal = new ManualResetEvent(false);
         private Thread thHeartBeat;
 
         private SimplePerformanceCounter simplePerf;
@@ -89,32 +90,42 @@ namespace TcpFramework.Client
 
         private bool ReuseHeartBeatSAEA(List<Message> messages) {
 
-            try {                
+            try {
 
-                SocketAsyncEventArgs arg = poolOfHeartBeatRecSendEventArgs.Pop();
+                while (!poolOfHeartBeatRecSendEventArgs.IsEmpty) {
 
-                if (arg == null)
-                    return false;
+                    cleanSignal.Reset();
 
-                simplePerf.PerfClientReuseConnectionCounter.Increment();
-                simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                    SocketAsyncEventArgs arg = poolOfHeartBeatRecSendEventArgs.Pop();
 
-                ClientUserToken userToken = (ClientUserToken)arg.UserToken;
-                userToken.CreateNewSendDataHolder();
-                SendDataHolder sendDataHodler = userToken.sendDataHolder;
+                    if (arg == null)
+                    {
+                        if (poolOfHeartBeatRecSendEventArgs.IsEmpty)
+                            return false;
+                        else
+                            continue;
+                    }
 
-                sendDataHodler.SetSendMessage(messages);
-                MessagePreparer.GetDataToSend(arg);
-                sendDataHodler.ArrayOfMessageToSend[0].StartTime = DateTime.Now;
+                    simplePerf.PerfClientReuseConnectionCounter.Increment();
+                    simplePerf.PerfClientIdleConnectionCounter.Decrement();
 
-                StartSend(arg);
+                    ClientUserToken userToken = (ClientUserToken)arg.UserToken;
+                    userToken.CreateNewSendDataHolder();
+                    SendDataHolder sendDataHodler = userToken.sendDataHolder;
 
-                return true;
+                    sendDataHodler.SetSendMessage(messages);
+                    MessagePreparer.GetDataToSend(arg);
+                    sendDataHodler.ArrayOfMessageToSend[0].StartTime = DateTime.Now;
 
+                    StartSend(arg);
+
+                    return true;
+                }               
             }
             catch { }
             finally {
-                
+
+                cleanSignal.Set();
             }
 
             return false;
@@ -234,7 +245,6 @@ namespace TcpFramework.Client
                 }
                 else
                 {
-
                     if (!supportKeepAlive)
                     {
                         receiveSendToken.sendDataHolder.ArrayOfMessageToSend = null;
@@ -277,41 +287,46 @@ namespace TcpFramework.Client
 
             int waitTime = 180000;            
 
-            while (true) {                
+            while (true) {
 
-                if (poolOfConnectEventArgs.Count < 3)
+                if (poolOfHeartBeatRecSendEventArgs.IsEmpty)
                 {
                     //池里太少就不再清理所谓"空闲"连接了。
                     Thread.Sleep(waitTime);
                     continue;  
                 }
 
+                cleanSignal.WaitOne();
+
                 SocketAsyncEventArgs heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
                 List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();                                                            
 
-                while (heartBeatSAEA != null)
+                while (!poolOfHeartBeatRecSendEventArgs.IsEmpty)
                 {
-                    ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
-                                        
-                    if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120) {
-                                                                      
-                        listRepush.Add(heartBeatSAEA);
+                    if (heartBeatSAEA != null) {
 
-                    } else {
+                        ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
 
-                        //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
-                        StartDisconnect(heartBeatSAEA);
-                        simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                        if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120)
+                        {
+                            listRepush.Add(heartBeatSAEA);
+                        }
+                        else
+                        {
+                            //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
+                            StartDisconnect(heartBeatSAEA);
+                            simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                        }                       
                     }
 
-                    if (poolOfConnectEventArgs.Count < 3)
-                        break;
+                    cleanSignal.WaitOne();
+                    heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();                    
+                }
 
-                    heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
-                }                
-
-                for (int i = 0; i < listRepush.Count; i++)
-                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[i]);
+                if (listRepush.Count > 1)
+                    poolOfHeartBeatRecSendEventArgs.BatchPush(listRepush.ToArray());
+                else if (listRepush.Count.Equals(1))
+                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[0]);
 
                 Thread.Sleep(waitTime);
             }
@@ -328,7 +343,6 @@ namespace TcpFramework.Client
             {
                 ProcessReceive(receiveSendEventArgs);
             }
-
         }
 
         private void ProcessSend(SocketAsyncEventArgs receiveSendEventArgs)

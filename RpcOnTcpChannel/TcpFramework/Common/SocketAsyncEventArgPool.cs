@@ -18,10 +18,18 @@ namespace TcpFramework.Common
             get { return this.pool.Count; }
         }
 
+        internal bool IsEmpty {
+
+            get { return this.pool.IsEmpty; }
+        }
+
         internal SocketAsyncEventArgs Pop()
         {
-            SocketAsyncEventArgs idleSAEA;
+            if (this.pool.IsEmpty)
+                return null;
 
+            SocketAsyncEventArgs idleSAEA;
+            
             if (!this.pool.TryPop(out idleSAEA))
                 return null;
 
@@ -35,8 +43,12 @@ namespace TcpFramework.Common
                 throw new ArgumentNullException("Items added to a SocketAsyncEventArgsPool cannot be null");
             }
 
-
             this.pool.Push(item);           
+        }
+
+        internal void BatchPush(SocketAsyncEventArgs[] arrItem) {
+
+            this.pool.PushRange(arrItem, 0, arrItem.Length);
         }
     }
 }
