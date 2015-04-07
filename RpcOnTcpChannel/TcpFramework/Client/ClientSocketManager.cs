@@ -26,7 +26,9 @@ namespace TcpFramework.Client
         private static SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private static SocketAsyncEventArgPool poolOfConnectEventArgs;
 
-        private static  ClientSocketProcessor processor;        
+        private static  ClientSocketProcessor processor;
+        private static Random rand = new Random();
+        private static int ServerCount = 0;
 
         public delegate byte[] PickResult(int tokenId);
 
@@ -42,6 +44,8 @@ namespace TcpFramework.Client
             sw.Start();
 
             clientSetting = ReadConfigFile.GetClientSetting();
+
+            ServerCount = clientSetting.serverEndPoints.Length;
 
             timeOutByMS = clientSetting.timeOutByMS;            
 
@@ -118,7 +122,12 @@ namespace TcpFramework.Client
 
                 List<Message> list = new List<Message>();
                 list.Add(_message);
-                processor.SendMessage(list, clientSetting.serverEndPoint);
+
+                System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
+
+                processor.SendMessage(list, _serverEndPoint);
+
+                LogManager.Log(string.Format("go through {0} on Port:{1}", _serverEndPoint,_serverEndPoint.Port));
 
                 if (manualResetEvent.WaitOne(timeOutByMS))
                 {
@@ -137,6 +146,7 @@ namespace TcpFramework.Client
                 try
                 {
                     processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;
+                    
                 }
                 finally { }                
             }

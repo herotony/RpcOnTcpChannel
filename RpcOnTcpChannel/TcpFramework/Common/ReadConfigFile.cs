@@ -77,6 +77,7 @@ namespace TcpFramework.Common
             int actualBingoCount = 0;
 
             Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting();
+            IPEndPoint[] ipEPs = null;
 
             foreach (string key in dictOriginalSetting.Keys)
             {
@@ -88,12 +89,19 @@ namespace TcpFramework.Common
 
                 if (lowerKey.StartsWith("hostinfo"))
                 {
-                    IPInfo = ParseHost(value);
-                    if (IPInfo == null)
-                        return null;
+                    string[] ipSetting = value.Split(',');
+                    ipEPs = new IPEndPoint[ipSetting.Length];
 
+                    for (int i = 0; i < ipEPs.Length; i++) {
+
+                        IPEndPoint _IPInfo = ParseHost(ipSetting[i]);
+                        if (_IPInfo == null)
+                            return null;
+
+                        ipEPs[i] = _IPInfo;
+                    }
+                   
                     actualBingoCount++;
-
                 }
                 else if (lowerKey.StartsWith("connectsocket_count"))
                 {
@@ -136,7 +144,7 @@ namespace TcpFramework.Common
 
             if (actualBingoCount.Equals(shouldBingoCount))
             {
-                return new ClientSetting(IPInfo, numberSendCountPerConnection, maxConnectSocketCount,
+                return new ClientSetting(ipEPs, numberSendCountPerConnection, maxConnectSocketCount,
                     maxDataSocketCount, bufferSize, receivePrefixLength, sendPrefixLength, opsToPreAllocate, timeOutByMS);
             }
             else

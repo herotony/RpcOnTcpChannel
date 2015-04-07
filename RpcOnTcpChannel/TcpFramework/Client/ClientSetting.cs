@@ -29,16 +29,16 @@ namespace TcpFramework.Client
 
 		internal int timeOutByMS{get;private set;}//单位：毫秒
 
-		internal IPEndPoint serverEndPoint;
+		internal IPEndPoint[] serverEndPoints;
 
 		//可考虑大并发时，一个连接发用于送多条请求消息后再关闭...
 		internal int numberOfMessagesPerConnection;
 
         internal bool useKeepAlive { get; private set; }
 
-        public ClientSetting(IPEndPoint theServerEndPoint, int numberOfMessagesPerConnection, int maxSimultaneousConnectOps, int theMaxConnections, int bufferSize = 128, int receivePrefixLength = 4, int sendPrefixLength = 4, int opsToPreAlloc = 2, int timeOut = 1000,bool useKeepAlive = true)
+        public ClientSetting(IPEndPoint[] theServerEndPoints, int numberOfMessagesPerConnection, int maxSimultaneousConnectOps, int theMaxConnections, int bufferSize = 128, int receivePrefixLength = 4, int sendPrefixLength = 4, int opsToPreAlloc = 2, int timeOut = 1000,bool useKeepAlive = true)
 		{
-            this.serverEndPoint = theServerEndPoint;
+            this.serverEndPoints = theServerEndPoints;
 
             this.numberOfMessagesPerConnection = numberOfMessagesPerConnection;
 

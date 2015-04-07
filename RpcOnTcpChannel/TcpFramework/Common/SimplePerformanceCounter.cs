@@ -45,7 +45,10 @@ namespace TcpFramework.Common
                     this.PerfClientIdleConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientIdleConnectionCounterName, "client_idle_connection_" + processName, false);
                 }
                 else
-                    this.PerfConcurrentServerConnectionCounter = new PerformanceCounter(this.CategoryName, this.ServerConcurrentConnectionCounterName, "server_concurrent_connection_" + processName, false);              
+                {
+                    string processId = Process.GetCurrentProcess().Id.ToString();
+                    this.PerfConcurrentServerConnectionCounter = new PerformanceCounter(this.CategoryName, this.ServerConcurrentConnectionCounterName, "server_concurrent_connection_" + processName+"("+processId+")", false);
+                }
             }            
         }
     }

@@ -17,7 +17,7 @@ namespace TcpFramework.Client
         public event EventHandler<ReceiveFeedbackDataCompleteEventArg> ReceiveFeedbackDataComplete;                       
 
         private bool supportKeepAlive = false;
-        private SocketAsyncEventArgPool poolOfHeartBeatRecSendEventArgs;
+        private Dictionary<int,SocketAsyncEventArgPool> dictPoolOfHeartBeatRecSendEventArgs;
         private ManualResetEvent cleanSignal = new ManualResetEvent(false);
         private Thread thHeartBeat;
 
@@ -50,7 +50,7 @@ namespace TcpFramework.Client
             
             if (this.supportKeepAlive)
             {
-                poolOfHeartBeatRecSendEventArgs = new SocketAsyncEventArgPool();
+                dictPoolOfHeartBeatRecSendEventArgs = new Dictionary<int, SocketAsyncEventArgPool>();
                 thHeartBeat = new Thread(new ThreadStart(RunHeartBeat));
                 thHeartBeat.IsBackground = true;
                 thHeartBeat.Start();
@@ -61,8 +61,13 @@ namespace TcpFramework.Client
         {           
             if (supportKeepAlive) {
 
-                if (ReuseHeartBeatSAEA(messages))
-                    return;                
+                if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
+                {
+                    LogManager.Log(string.Format("reuse port: {0} socket pool successfully", serverEndPoint.Port));
+                    return;
+                }
+                else
+                    LogManager.Log(string.Format("will open new connect to port:{0}", serverEndPoint.Port));
             }           
             
             maxConcurrentConnection.WaitOne();                              
@@ -88,24 +93,29 @@ namespace TcpFramework.Client
             StartConnect(connectEventArgs, serverEndPoint);
         }        
 
-        private bool ReuseHeartBeatSAEA(List<Message> messages) {
+        private bool ReuseHeartBeatSAEA(List<Message> messages,int listenerPort) {
 
             try {
 
-                while (!poolOfHeartBeatRecSendEventArgs.IsEmpty) {
+                if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(listenerPort))
+                    return false;
 
+                SocketAsyncEventArgPool thisPortSocketPool = dictPoolOfHeartBeatRecSendEventArgs[listenerPort];
+
+                while (!thisPortSocketPool.IsEmpty)
+                {
                     cleanSignal.Reset();
 
-                    SocketAsyncEventArgs arg = poolOfHeartBeatRecSendEventArgs.Pop();
+                    SocketAsyncEventArgs arg = thisPortSocketPool.Pop();
 
                     if (arg == null)
                     {
-                        if (poolOfHeartBeatRecSendEventArgs.IsEmpty)
+                        if (thisPortSocketPool.IsEmpty)
                             return false;
                         else
                             continue;
                     }
-
+                    
                     simplePerf.PerfClientReuseConnectionCounter.Increment();
                     simplePerf.PerfClientIdleConnectionCounter.Decrement();
 
@@ -280,7 +290,22 @@ namespace TcpFramework.Client
 
             simplePerf.PerfClientIdleConnectionCounter.Increment();
 
-            poolOfHeartBeatRecSendEventArgs.Push(e);                          
+            if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerPort))
+            {
+                lock (this)
+                {
+                    if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerPort))
+                    {
+                        SocketAsyncEventArgPool pool = new SocketAsyncEventArgPool();
+                        pool.Push(e);
+                        dictPoolOfHeartBeatRecSendEventArgs.Add(userToken.ServerPort, pool);
+                    }
+                    else
+                        dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerPort].Push(e);
+                }
+            }
+            else
+                dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerPort].Push(e);                
         }
 
         private void RunHeartBeat() {
@@ -289,45 +314,49 @@ namespace TcpFramework.Client
 
             while (true) {
 
-                if (poolOfHeartBeatRecSendEventArgs.IsEmpty)
-                {
-                    //池里太少就不再清理所谓"空闲"连接了。
-                    Thread.Sleep(waitTime);
-                    continue;  
-                }
+                foreach (int portKey in dictPoolOfHeartBeatRecSendEventArgs.Keys) {
 
-                cleanSignal.WaitOne();
+                    SocketAsyncEventArgPool thisPortKey = dictPoolOfHeartBeatRecSendEventArgs[portKey];
 
-                SocketAsyncEventArgs heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();
-                List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();                                                            
-
-                while (!poolOfHeartBeatRecSendEventArgs.IsEmpty)
-                {
-                    if (heartBeatSAEA != null) {
-
-                        ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
-
-                        if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120)
-                        {
-                            listRepush.Add(heartBeatSAEA);
-                        }
-                        else
-                        {
-                            //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
-                            StartDisconnect(heartBeatSAEA);
-                            simplePerf.PerfClientIdleConnectionCounter.Decrement();
-                        }                       
+                    if (thisPortKey.IsEmpty)
+                    {                        
+                        continue;
                     }
 
                     cleanSignal.WaitOne();
-                    heartBeatSAEA = poolOfHeartBeatRecSendEventArgs.Pop();                    
+
+                    SocketAsyncEventArgs heartBeatSAEA = thisPortKey.Pop();
+                    List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
+
+                    while (!thisPortKey.IsEmpty)
+                    {
+                        if (heartBeatSAEA != null)
+                        {
+
+                            ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
+
+                            if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120)
+                            {
+                                listRepush.Add(heartBeatSAEA);
+                            }
+                            else
+                            {
+                                //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
+                                StartDisconnect(heartBeatSAEA);
+                                simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                            }
+                        }
+
+                        cleanSignal.WaitOne();
+                        heartBeatSAEA = thisPortKey.Pop();
+                    }
+
+                    if (listRepush.Count > 1)
+                        thisPortKey.BatchPush(listRepush.ToArray());
+                    else if (listRepush.Count.Equals(1))
+                        thisPortKey.Push(listRepush[0]);
                 }
-
-                if (listRepush.Count > 1)
-                    poolOfHeartBeatRecSendEventArgs.BatchPush(listRepush.ToArray());
-                else if (listRepush.Count.Equals(1))
-                    poolOfHeartBeatRecSendEventArgs.Push(listRepush[0]);
-
+                
                 Thread.Sleep(waitTime);
             }
         }
@@ -426,6 +455,7 @@ namespace TcpFramework.Client
             
             if (connectEventArgs.SocketError == SocketError.Success)
             {
+                LogManager.Log(string.Format("connect on port:{0} ok!", theConnectingToken.ServerPort));
                 SocketAsyncEventArgs receiveSendEventArgs = poolOfRecSendEventArgs.Pop();
                 
                 if (receiveSendEventArgs == null)
@@ -437,11 +467,12 @@ namespace TcpFramework.Client
 
                 simplePerf.PerfConcurrentClientConnectionCounter.Increment();
 
-                receiveSendEventArgs.AcceptSocket = connectEventArgs.AcceptSocket;
+                receiveSendEventArgs.AcceptSocket = connectEventArgs.AcceptSocket;                
 
                 ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
                 receiveSendToken.sendDataHolder.SetSendMessage(theConnectingToken.ArrayOfMessageReadyToSend);
+                receiveSendToken.ServerPort = theConnectingToken.ServerPort;
 
                 MessagePreparer.GetDataToSend(receiveSendEventArgs);
 
@@ -456,6 +487,7 @@ namespace TcpFramework.Client
             }
             else
             {
+                LogManager.Log(string.Format("connect on port:{0} fail!{1}", theConnectingToken.ServerPort, connectEventArgs.SocketError));
                 ProcessConnectionError(connectEventArgs);
             }
         }
@@ -517,6 +549,7 @@ namespace TcpFramework.Client
             try {
                 
                 ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
+                theConnectingToken.ServerPort = serverEndPoint.Port;
 
                 connectEventArgs.RemoteEndPoint = serverEndPoint;
                 connectEventArgs.AcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);                            

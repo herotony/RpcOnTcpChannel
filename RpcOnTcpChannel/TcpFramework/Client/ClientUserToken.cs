@@ -11,6 +11,7 @@ namespace TcpFramework.Client
     {
         internal SendDataHolder sendDataHolder;
         internal bool isReuseConnection;
+        internal int ServerPort;
 
         public ClientUserToken(int receiveOffset, int sendOffset, int receivePrefixLength, int sendPrefixLength) : base(receiveOffset, sendOffset, receivePrefixLength, sendPrefixLength) {
 

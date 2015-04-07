@@ -55,6 +55,8 @@ namespace TcpFramework.Server
             listenSocket.Bind(serverSetting.localEndPoint);
             listenSocket.Listen(1000000);
 
+            LogManager.Log(string.Format("listen on {0}", serverSetting.localEndPoint));
+
             StartAccept();
         }
 
