@@ -61,6 +61,7 @@ server:
    简便起见：设定用Port来区分具体业务的设计，也是行得通的。不同Port可以属于同一个业务，亦即性能扩展；不同Port也可以属于不同业务，亦即业务扩展。  
 
    算了，时间有限，简单通过复制一个等同于ClientSocketManager.cs的LogClientSocketManager.cs配合log_socketsetting.txt单独用于http下的日志记录，未来再细改为通过配置修改支持业务扩展！
+   实际上相关的计数器也要单独修改才能准确计数...五月份完成最终完善版吧。
 
    
 
