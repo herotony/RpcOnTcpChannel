@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Net.Sockets;
@@ -12,8 +10,8 @@ using TcpFramework.Common;
 
 namespace TcpFramework.Client
 {
-    public class ClientSocketManager
-    {              
+    public class LogClientSocketManager 
+    {
         private static int msgTokenId = 0;
         private static int timeOutByMS = 500;//超时设置，单位毫秒        
 
@@ -32,8 +30,8 @@ namespace TcpFramework.Client
 
         public delegate byte[] PickResult(int tokenId);
 
-        static ClientSocketManager() {
-
+        static LogClientSocketManager()
+        {
             Init();
         }
 
@@ -43,7 +41,7 @@ namespace TcpFramework.Client
 
             sw.Start();
 
-            clientSetting = ReadConfigFile.GetClientSetting();
+            clientSetting = ReadConfigFile.GetClientSetting("log_socketsetting.txt");
 
             ServerCount = clientSetting.serverEndPoints.Length;
 
@@ -177,6 +175,6 @@ namespace TcpFramework.Client
         private static int GetNewTokenId()
         {
             return Interlocked.Increment(ref msgTokenId);
-        }       
+        }    
     }
 }

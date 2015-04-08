@@ -47,6 +47,7 @@
     <Compile Include="Client\ClientSocketProcessor.cs" />
     <Compile Include="Client\ClientUserToken.cs" />
     <Compile Include="Client\ConnectOpUserToken.cs" />
+    <Compile Include="Client\LogClientSocketManager.cs" />
     <Compile Include="Client\Message.cs" />
     <Compile Include="Client\MessagePreparer.cs" />
     <Compile Include="Client\ReceiveFeedbackDataCompleteEventArg.cs" />

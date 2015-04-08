@@ -35,13 +35,13 @@ namespace TcpFramework.Common
                 path += @"\";
         }
 
-        private static Dictionary<string, string> GetKeyValueSetting()
+        private static Dictionary<string, string> GetKeyValueSetting(string settingFileName="")
         {
             Dictionary<string, string> dictKeyValueSetting = new Dictionary<string, string>();
 
             string content = string.Empty;
 
-            using (FileStream fs = new FileStream(path + fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (FileStream fs = new FileStream(path + (settingFileName==""?fileName:settingFileName), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 StreamReader reader = new StreamReader(fs);
                 content = reader.ReadToEnd();
@@ -71,12 +71,12 @@ namespace TcpFramework.Common
             return dictKeyValueSetting.Count > 0 ? dictKeyValueSetting : null;
         }
 
-        internal static ClientSetting GetClientSetting() {
+        internal static ClientSetting GetClientSetting(string settingFileName="") {
 
             int shouldBingoCount = 6;
             int actualBingoCount = 0;
 
-            Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting();
+            Dictionary<string, string> dictOriginalSetting = GetKeyValueSetting(settingFileName);
             IPEndPoint[] ipEPs = null;
 
             foreach (string key in dictOriginalSetting.Keys)

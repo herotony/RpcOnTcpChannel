@@ -9,7 +9,9 @@ namespace HttpManager
 {
     public class Client
     {
-        public static string SendRequest(string command, string requestString) {
+        public  enum route { common, log };
+
+        public static string SendRequest(string command, string requestString,route routeType=route.common) {
 
             try {
 
@@ -24,20 +26,41 @@ namespace HttpManager
                 Buffer.BlockCopy(commandByte, 0, sendData, commandLengthByte.Length, commandByte.Length);
                 Buffer.BlockCopy(requestXmlByte, 0, sendData, commandLengthByte.Length + commandByte.Length, requestXmlByte.Length);
 
-                ClientSocketManager csmgr = new ClientSocketManager();
-
-                string message = string.Empty;
-
-                byte[] retData = csmgr.SendRequest(sendData, ref message);
-
-                if (message.Equals("ok"))
+                if (routeType == route.common)
                 {
-                    if (retData != null && retData.Length > 8)
-                        return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
-                    else
-                        return "failbynull";
-                }
+                    ClientSocketManager csmgr = new ClientSocketManager();
 
+                    string message = string.Empty;
+
+                    byte[] retData = csmgr.SendRequest(sendData, ref message);
+
+                    if (message.Equals("ok"))
+                    {
+                        if (retData != null && retData.Length > 8)
+                            return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
+                        else
+                            return "failbynull";
+                    }
+                }
+                else if (routeType == route.log)
+                {
+
+                    LogClientSocketManager csmgr = new LogClientSocketManager();
+
+                    string message = string.Empty;
+
+                    byte[] retData = csmgr.SendRequest(sendData, ref message);
+
+                    if (message.Equals("ok"))
+                    {
+                        if (retData != null && retData.Length > 8)
+                            return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
+                        else
+                            return "failbynull";
+                    }
+                }
+                else
+                    return "failbyunknown";
             }
             catch { }            
 
