@@ -62,12 +62,9 @@ namespace TcpFramework.Client
             if (supportKeepAlive) {
 
                 if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
-                {
-                    LogManager.Log(string.Format("reuse port: {0} socket pool successfully", serverEndPoint.Port));
+                {                    
                     return;
-                }
-                else
-                    LogManager.Log(string.Format("will open new connect to port:{0}", serverEndPoint.Port));
+                }               
             }           
             
             maxConcurrentConnection.WaitOne();                              
@@ -313,7 +310,7 @@ namespace TcpFramework.Client
             int waitTime = 180000;            
 
             while (true) {
-
+                
                 foreach (int portKey in dictPoolOfHeartBeatRecSendEventArgs.Keys) {
 
                     SocketAsyncEventArgPool thisPortKey = dictPoolOfHeartBeatRecSendEventArgs[portKey];
@@ -323,8 +320,13 @@ namespace TcpFramework.Client
                         continue;
                     }
 
-                    cleanSignal.WaitOne();
+                    Stopwatch sw = new Stopwatch();
 
+                    sw.Start();
+                    bool existNeedReuseItem = false;
+
+                    cleanSignal.WaitOne();
+                    
                     SocketAsyncEventArgs heartBeatSAEA = thisPortKey.Pop();
                     List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
 
@@ -332,12 +334,12 @@ namespace TcpFramework.Client
                     {
                         if (heartBeatSAEA != null)
                         {
-
                             ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
 
                             if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120)
                             {
                                 listRepush.Add(heartBeatSAEA);
+                                existNeedReuseItem = true;
                             }
                             else
                             {
@@ -345,6 +347,13 @@ namespace TcpFramework.Client
                                 StartDisconnect(heartBeatSAEA);
                                 simplePerf.PerfClientIdleConnectionCounter.Decrement();
                             }
+                        }
+
+                        if (existNeedReuseItem) {
+
+                            //别因为等待信号，导致可复用连接长时间无效闲置
+                            if (sw.ElapsedMilliseconds > 100)
+                                break;
                         }
 
                         cleanSignal.WaitOne();
@@ -454,8 +463,7 @@ namespace TcpFramework.Client
             ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
             
             if (connectEventArgs.SocketError == SocketError.Success)
-            {
-                LogManager.Log(string.Format("connect on port:{0} ok!", theConnectingToken.ServerPort));
+            {                
                 SocketAsyncEventArgs receiveSendEventArgs = poolOfRecSendEventArgs.Pop();
                 
                 if (receiveSendEventArgs == null)
@@ -486,8 +494,7 @@ namespace TcpFramework.Client
                 
             }
             else
-            {
-                LogManager.Log(string.Format("connect on port:{0} fail!{1}", theConnectingToken.ServerPort, connectEventArgs.SocketError));
+            {                
                 ProcessConnectionError(connectEventArgs);
             }
         }

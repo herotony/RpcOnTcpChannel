@@ -125,9 +125,7 @@ namespace TcpFramework.Client
 
                 System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
 
-                processor.SendMessage(list, _serverEndPoint);
-
-                LogManager.Log(string.Format("go through {0} on Port:{1}", _serverEndPoint,_serverEndPoint.Port));
+                processor.SendMessage(list, _serverEndPoint);                
 
                 if (manualResetEvent.WaitOne(timeOutByMS))
                 {
@@ -145,8 +143,7 @@ namespace TcpFramework.Client
                
                 try
                 {
-                    processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;
-                    
+                    processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;                    
                 }
                 finally { }                
             }

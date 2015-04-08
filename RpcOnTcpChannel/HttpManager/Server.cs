@@ -8,7 +8,7 @@ namespace HttpManager
 {
     public class Server
     {
-        public static string GetRequestXml(byte[] inputData, ref string command) {
+        public static string GetRequestString(byte[] inputData, ref string command) {
 
             int commandLength = BitConverter.ToInt32(inputData, 0);
             command = Encoding.UTF8.GetString(inputData, 4,commandLength);

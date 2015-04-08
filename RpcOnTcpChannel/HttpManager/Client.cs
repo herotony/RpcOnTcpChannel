@@ -9,32 +9,37 @@ namespace HttpManager
 {
     public class Client
     {
-        public static string SendRequest(string command, string requestXml) {
+        public static string SendRequest(string command, string requestString) {
 
-            byte[] commandByte = Encoding.UTF8.GetBytes(command);
-            int commandLength = commandByte.Length;
-            byte[] commandLengthByte = BitConverter.GetBytes(commandLength);
+            try {
 
-            byte[] requestXmlByte = Encoding.UTF8.GetBytes(requestXml);
-            byte[] sendData = new byte[commandLengthByte.Length + commandByte.Length + requestXmlByte.Length];
+                byte[] commandByte = Encoding.UTF8.GetBytes(command);
+                int commandLength = commandByte.Length;
+                byte[] commandLengthByte = BitConverter.GetBytes(commandLength);
 
-            Buffer.BlockCopy(commandLengthByte, 0, sendData, 0, commandLengthByte.Length);
-            Buffer.BlockCopy(commandByte, 0, sendData, commandLengthByte.Length, commandByte.Length);
-            Buffer.BlockCopy(requestXmlByte, 0, sendData, commandLengthByte.Length + commandByte.Length, requestXmlByte.Length);
+                byte[] requestXmlByte = Encoding.UTF8.GetBytes(requestString);
+                byte[] sendData = new byte[commandLengthByte.Length + commandByte.Length + requestXmlByte.Length];
 
-            ClientSocketManager csmgr = new ClientSocketManager();
+                Buffer.BlockCopy(commandLengthByte, 0, sendData, 0, commandLengthByte.Length);
+                Buffer.BlockCopy(commandByte, 0, sendData, commandLengthByte.Length, commandByte.Length);
+                Buffer.BlockCopy(requestXmlByte, 0, sendData, commandLengthByte.Length + commandByte.Length, requestXmlByte.Length);
 
-            string message = string.Empty;
+                ClientSocketManager csmgr = new ClientSocketManager();
 
-            byte[] retData = csmgr.SendRequest(sendData, ref message);
+                string message = string.Empty;
 
-            if (message.Equals("ok")) {
+                byte[] retData = csmgr.SendRequest(sendData, ref message);
 
-                if (retData != null && retData.Length > 8)
-                    return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
-                else
-                    return "failbynull";
+                if (message.Equals("ok"))
+                {
+                    if (retData != null && retData.Length > 8)
+                        return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
+                    else
+                        return "failbynull";
+                }
+
             }
+            catch { }            
 
             return "fail";
         }                
