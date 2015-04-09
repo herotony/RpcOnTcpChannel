@@ -22,7 +22,7 @@ namespace TcpFramework.Common
         public string ClientIdleConnectionCounterName { get; private set; }
         public PerformanceCounter PerfClientIdleConnectionCounter { get; private set; }
 
-        public SimplePerformanceCounter(bool isCreateCounter = false,bool isServer=false) {
+        public SimplePerformanceCounter(bool isCreateCounter = false,bool isServer=false,string specialName="") {
 
             this.CategoryName = "__TcpFrameworkPerfCounter__";
             if (!isServer)
@@ -40,9 +40,9 @@ namespace TcpFramework.Common
 
                 if (!isServer)
                 {
-                    this.PerfConcurrentClientConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientConcurrentConnectionCounterName, "client_concurrent_connection_" + processName, false);
-                    this.PerfClientReuseConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientResuseConnectionCounterName, "client_reuse_connection_" + processName, false);
-                    this.PerfClientIdleConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientIdleConnectionCounterName, "client_idle_connection_" + processName, false);
+                    this.PerfConcurrentClientConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientConcurrentConnectionCounterName, "client_concurrent_connection_" + processName+AppendSuffixName(specialName), false);
+                    this.PerfClientReuseConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientResuseConnectionCounterName, "client_reuse_connection_" + processName + processName + AppendSuffixName(specialName), false);
+                    this.PerfClientIdleConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientIdleConnectionCounterName, "client_idle_connection_" + processName + processName + AppendSuffixName(specialName), false);
                 }
                 else
                 {
@@ -50,6 +50,14 @@ namespace TcpFramework.Common
                     this.PerfConcurrentServerConnectionCounter = new PerformanceCounter(this.CategoryName, this.ServerConcurrentConnectionCounterName, "server_concurrent_connection_" + processName+"("+processId+")", false);
                 }
             }            
+        }
+
+        private string AppendSuffixName(string name) {
+
+            if (string.IsNullOrEmpty(name))
+                return "";
+            else
+                return "(" + name + ")";
         }
     }
 }

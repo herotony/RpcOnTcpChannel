@@ -34,11 +34,11 @@ namespace TcpFramework.Client
         private int prefixHandleLength;
         private int bufferSize;
              
-        public ClientSocketProcessor(SocketAsyncEventArgPool connectPool, SocketAsyncEventArgPool recSendPool, int maxRecSendConnection, int bufferSize, int numberMessageOfPerConnection, int prefixHandleLength,bool supportKeepAlive = false) {
+        public ClientSocketProcessor(SocketAsyncEventArgPool connectPool, SocketAsyncEventArgPool recSendPool, int maxRecSendConnection, int bufferSize, int numberMessageOfPerConnection, int prefixHandleLength,bool supportKeepAlive = false,string specialName="") {
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
-            this.simplePerf = new SimplePerformanceCounter(true,false);            
+            this.simplePerf = new SimplePerformanceCounter(true,false,specialName);            
 
             this.maxConcurrentConnection = new Semaphore(maxRecSendConnection, maxRecSendConnection);
 

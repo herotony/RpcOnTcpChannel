@@ -63,7 +63,7 @@ namespace TcpFramework.Client
             poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
 
             //实际负责处理相关传输数据的关键核心类
-            processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength,clientSetting.useKeepAlive);
+            processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength,clientSetting.useKeepAlive,"bizclient");
 
             //由于不涉及buffermanager，可动态增长
             for (int i = 0; i < clientSetting.maxSimultaneousConnectOps; i++)
