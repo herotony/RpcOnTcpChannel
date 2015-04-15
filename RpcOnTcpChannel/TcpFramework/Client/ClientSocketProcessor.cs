@@ -67,7 +67,15 @@ namespace TcpFramework.Client
                 }               
             }           
             
-            maxConcurrentConnection.WaitOne();                              
+            maxConcurrentConnection.WaitOne();
+
+            if (supportKeepAlive) {
+
+                if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
+                {
+                    return;
+                }  
+            }
 
             SocketAsyncEventArgs connectEventArgs = this.poolOfConnectEventArgs.Pop();
 
@@ -91,6 +99,7 @@ namespace TcpFramework.Client
         }        
 
         private bool ReuseHeartBeatSAEA(List<Message> messages,int listenerPort) {
+            
 
             try {
 
@@ -98,6 +107,7 @@ namespace TcpFramework.Client
                     return false;
 
                 SocketAsyncEventArgPool thisPortSocketPool = dictPoolOfHeartBeatRecSendEventArgs[listenerPort];
+                
 
                 while (!thisPortSocketPool.IsEmpty)
                 {
@@ -108,9 +118,14 @@ namespace TcpFramework.Client
                     if (arg == null)
                     {
                         if (thisPortSocketPool.IsEmpty)
+                        {                            
                             return false;
+                        }
                         else
+                        {
+                            Thread.Sleep(1);                            
                             continue;
+                        }
                     }
                     
                     simplePerf.PerfClientReuseConnectionCounter.Increment();
@@ -129,8 +144,11 @@ namespace TcpFramework.Client
                     return true;
                 }               
             }
-            catch { }
-            finally {
+            catch(Exception pickErr) {
+
+                LogManager.Log(string.Format("pick socket from port:{0} occur error!", listenerPort), pickErr);
+            }
+            finally {               
 
                 cleanSignal.Set();
             }
