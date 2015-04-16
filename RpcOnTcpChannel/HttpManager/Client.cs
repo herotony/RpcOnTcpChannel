@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 
 using TcpFramework.Client;
+using log4net;
 
 namespace HttpManager
 {
     public class Client
     {
+        private static ILog logClient = LogManager.GetLogger(typeof(Client));
+
         public  enum route { common, log };
 
         public static string SendRequest(string command, string requestString,route routeType=route.common) {
@@ -34,12 +37,16 @@ namespace HttpManager
 
                     byte[] retData = csmgr.SendRequest(sendData, ref message);
 
-                    if (message.Equals("ok"))
+                    if (message.Equals("socket:ok"))
                     {
                         if (retData != null && retData.Length > 8)
                             return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
                         else
-                            return "failbynull";
+                            return "socket:failbynull";
+                    }
+                    else {
+
+                        return message;
                     }
                 }
                 else if (routeType == route.log)
@@ -51,18 +58,23 @@ namespace HttpManager
 
                     byte[] retData = csmgr.SendRequest(sendData, ref message);
 
-                    if (message.Equals("ok"))
+                    if (message.Equals("socket:ok"))
                     {
                         if (retData != null && retData.Length > 8)
                             return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
                         else
-                            return "failbynull";
+                            return "socket:failbynull";
                     }
+                    else
+                        return message;
                 }
                 else
                     return "failbyunknown";
             }
-            catch { }            
+            catch(Exception clientErr) {
+
+                logClient.Error(string.Format("SendRequest异常!\r\ncmd:{0}\r\nrequest:{1}\r\nerr:{2}\r\nstackTrace:{3}\r\n", command, requestString, clientErr.Message, clientErr.StackTrace), clientErr);
+            }            
 
             return "fail";
         }                

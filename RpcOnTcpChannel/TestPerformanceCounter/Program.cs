@@ -44,6 +44,9 @@ namespace TestPerformanceCounter
                 dictPerfInfo.Add(simplePerf.ClientConcurrentConnectionCounterName, PerformanceCounterType.NumberOfItems32);
                 dictPerfInfo.Add(simplePerf.ClientResuseConnectionCounterName, PerformanceCounterType.NumberOfItems32);
                 dictPerfInfo.Add(simplePerf.ClientIdleConnectionCounterName, PerformanceCounterType.NumberOfItems32);
+                dictPerfInfo.Add(simplePerf.ClientRequestSuccessCounterName, PerformanceCounterType.RateOfCountsPerSecond32);
+                dictPerfInfo.Add(simplePerf.ClientRequestFailCounterName, PerformanceCounterType.RateOfCountsPerSecond32);
+                dictPerfInfo.Add(simplePerf.ClientRequestTotalCounterName, PerformanceCounterType.RateOfCountsPerSecond32);
             }
             
             if (terminalType.Equals("server") || terminalType.Equals("all"))

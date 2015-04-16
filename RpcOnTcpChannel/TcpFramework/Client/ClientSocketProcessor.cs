@@ -12,8 +12,10 @@ using TcpFramework.Common;
 
 namespace TcpFramework.Client
 {
+    public enum SendStatus { OK_ON_STEPONE_REUSE, OK_ON_STEPTWO_REUSE, OK_ON_OPENNEW, CONNECTION_EXHAUST, TOOMANY_REQUEST };
+
     internal class ClientSocketProcessor
-    {        
+    {       
         public event EventHandler<ReceiveFeedbackDataCompleteEventArg> ReceiveFeedbackDataComplete;                       
 
         private bool supportKeepAlive = false;
@@ -21,12 +23,16 @@ namespace TcpFramework.Client
         private ManualResetEvent cleanSignal = new ManualResetEvent(false);
         private Thread thHeartBeat;
 
-        private SimplePerformanceCounter simplePerf;
+        internal SimplePerformanceCounter simplePerf;
         private SocketAsyncEventArgPool poolOfRecSendEventArgs;
-        private SocketAsyncEventArgPool poolOfConnectEventArgs;   
+        private SocketAsyncEventArgPool poolOfConnectEventArgs;        
            
         //允许的最大并发连接数
-        private Semaphore maxConcurrentConnection;        
+        private Semaphore maxConcurrentConnection;
+        private object lockConcurrentStepOne = new object();
+        private object lockConcurrentStepTwo = new object();
+        private int maxConnectionCount = 0;
+        private int currentConnectionCount = 0;        
 
         //每个连接最多能发送的消息数量，一般为一次一条
         private int numberMessagesOfPerConnection;
@@ -38,8 +44,9 @@ namespace TcpFramework.Client
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
-            this.simplePerf = new SimplePerformanceCounter(true,false,specialName);            
+            this.simplePerf = new SimplePerformanceCounter(true,false,specialName);
 
+            this.maxConnectionCount = maxRecSendConnection;
             this.maxConcurrentConnection = new Semaphore(maxRecSendConnection, maxRecSendConnection);
 
             this.bufferSize = bufferSize;
@@ -57,25 +64,43 @@ namespace TcpFramework.Client
             }
         }                      
 
-        internal void SendMessage(List<Message> messages, IPEndPoint serverEndPoint)
+        internal SendStatus SendMessage(List<Message> messages, IPEndPoint serverEndPoint,int currentRequestCount)
         {           
             if (supportKeepAlive) {
 
                 if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
                 {                    
-                    return;
+                    return SendStatus.OK_ON_STEPONE_REUSE;
                 }               
-            }           
-            
+            }
+
+            //到达配置限制数量，立即返回防止IIS线程越开越多进入假死状态。
+            lock (lockConcurrentStepOne) {
+
+                if ((maxConnectionCount - currentConnectionCount) < 1)
+                    return SendStatus.CONNECTION_EXHAUST;
+                else if (currentRequestCount > maxConnectionCount)
+                    return SendStatus.TOOMANY_REQUEST;
+            }
+                       
             maxConcurrentConnection.WaitOne();
 
             if (supportKeepAlive) {
 
                 if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
                 {
-                    return;
+                    return SendStatus.OK_ON_STEPTWO_REUSE;
                 }  
             }
+
+            //到达配置限制数量，立即返回防止IIS线程越开越多进入假死状态。
+            lock (lockConcurrentStepTwo)
+            {
+                if ((maxConnectionCount - currentConnectionCount) < 1)
+                    return SendStatus.CONNECTION_EXHAUST;
+                else if (currentRequestCount > maxConnectionCount)
+                    return SendStatus.TOOMANY_REQUEST;
+            }            
 
             SocketAsyncEventArgs connectEventArgs = this.poolOfConnectEventArgs.Pop();
 
@@ -96,6 +121,8 @@ namespace TcpFramework.Client
             }            
 
             StartConnect(connectEventArgs, serverEndPoint);
+
+            return SendStatus.OK_ON_OPENNEW;
         }        
 
         private bool ReuseHeartBeatSAEA(List<Message> messages,int listenerPort) {
@@ -302,7 +329,7 @@ namespace TcpFramework.Client
             {                
                 simplePerf.PerfClientReuseConnectionCounter.Decrement();                
             }
-
+            
             simplePerf.PerfClientIdleConnectionCounter.Increment();
 
             if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerPort))
@@ -491,7 +518,8 @@ namespace TcpFramework.Client
                     return;
                 }
 
-                simplePerf.PerfConcurrentClientConnectionCounter.Increment();
+                Interlocked.Increment(ref currentConnectionCount);
+                simplePerf.PerfConcurrentClientConnectionCounter.Increment();                
 
                 receiveSendEventArgs.AcceptSocket = connectEventArgs.AcceptSocket;                
 
@@ -631,6 +659,7 @@ namespace TcpFramework.Client
             finally
             {
                 this.maxConcurrentConnection.Release();
+                Interlocked.Decrement(ref currentConnectionCount);
                 simplePerf.PerfConcurrentClientConnectionCounter.Decrement();
             }
         }

@@ -30,6 +30,8 @@ namespace TcpFramework.Client
         private static Random rand = new Random();
         private static int ServerCount = 0;
 
+        private static int concurrentRequestCount = 0;       
+
         public delegate byte[] PickResult(int tokenId);
 
         static ClientSocketManager() {
@@ -125,15 +127,35 @@ namespace TcpFramework.Client
                 
                 System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
 
-                processor.SendMessage(list, _serverEndPoint);                
+                Interlocked.Increment(ref concurrentRequestCount);
+                processor.simplePerf.PerfClientRequestTotalCounter.Increment();
 
-                if (manualResetEvent.WaitOne(timeOutByMS))
-                {
-                    message = "ok";                    
-                    return result;
-                }
+                SendStatus  sendStatus = processor.SendMessage(list, _serverEndPoint,concurrentRequestCount);
 
-                message = "timeout";                
+                switch (sendStatus) {
+
+                    case SendStatus.OK_ON_OPENNEW:
+                    case SendStatus.OK_ON_STEPONE_REUSE:
+                    case SendStatus.OK_ON_STEPTWO_REUSE:
+
+                        if (manualResetEvent.WaitOne(timeOutByMS))
+                        {                            
+                            message = "socket:ok";
+                            processor.simplePerf.PerfClientRequestSuccessCounter.Increment();
+                            return result;
+                        }
+
+                        message = "socket:timeout";
+                        break;
+                    case SendStatus.CONNECTION_EXHAUST:
+                        message = "socket:connection exhaust";
+                        break;
+                    case SendStatus.TOOMANY_REQUEST:
+                        message = "socket:too many request";
+                        break;
+                };
+
+                processor.simplePerf.PerfClientRequestFailCounter.Increment();         
             }
             catch(Exception sendErr) {
 
@@ -143,6 +165,7 @@ namespace TcpFramework.Client
                
                 try
                 {
+                    Interlocked.Decrement(ref concurrentRequestCount);
                     processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;                    
                 }
                 finally { }                
@@ -169,7 +192,7 @@ namespace TcpFramework.Client
                 LogManager.Log(string.Format("{0} occur error", e.MessageTokenId), feedbackErr);
             }
             finally {
-
+                
                 manualResetEvent.Set();   
             }                                       
         }                   

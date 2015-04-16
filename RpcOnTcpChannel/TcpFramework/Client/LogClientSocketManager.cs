@@ -23,6 +23,8 @@ namespace TcpFramework.Client
 
         private static SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private static SocketAsyncEventArgPool poolOfConnectEventArgs;
+         
+        private static int concurrentRequestCount = 0;        
 
         private static  ClientSocketProcessor processor;
         private static Random rand = new Random();
@@ -107,7 +109,8 @@ namespace TcpFramework.Client
 
         public byte[] SendRequest(byte[] sendData, ref string message) {
 
-            try {                
+            try
+            {
 
                 int _tokenId = GetNewTokenId();
 
@@ -115,37 +118,62 @@ namespace TcpFramework.Client
                 _message.TokenId = _tokenId;
                 _message.Content = sendData;
                 this.messageTokenId = _tokenId;
-                
+
                 processor.ReceiveFeedbackDataComplete += Processor_ReceiveFeedbackDataComplete;
 
                 List<Message> list = new List<Message>();
                 list.Add(_message);
-                
+
                 System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
 
-                processor.SendMessage(list, _serverEndPoint);                
+                Interlocked.Increment(ref concurrentRequestCount);
+                processor.simplePerf.PerfClientRequestTotalCounter.Increment();
 
-                if (manualResetEvent.WaitOne(timeOutByMS))
+                SendStatus sendStatus = processor.SendMessage(list, _serverEndPoint, concurrentRequestCount);
+
+                switch (sendStatus)
                 {
-                    message = "ok";                    
-                    return result;
-                }
 
-                message = "timeout";                
-            }
-            catch(Exception sendErr) {
+                    case SendStatus.OK_ON_OPENNEW:
+                    case SendStatus.OK_ON_STEPONE_REUSE:
+                    case SendStatus.OK_ON_STEPTWO_REUSE:
 
-                message = "err:"+sendErr.Message + "\r\nstackTrace:" + sendErr.StackTrace;
+                        if (manualResetEvent.WaitOne(timeOutByMS))
+                        {
+                            processor.simplePerf.PerfClientRequestSuccessCounter.Increment();
+                            message = "socket:ok";
+                            return result;
+                        }
+
+                        message = "socket:timeout";
+                        break;
+                    case SendStatus.CONNECTION_EXHAUST:
+                        message = "socket:connection exhaust";
+                        break;
+                    case SendStatus.TOOMANY_REQUEST:
+                        message = "socket:too many request";
+                        break;
+                };
+
+                processor.simplePerf.PerfClientRequestFailCounter.Increment();  
             }
-            finally {
-               
+            catch (Exception sendErr)
+            {
+
+                message = "err:" + sendErr.Message + "\r\nstackTrace:" + sendErr.StackTrace;
+            }
+            finally
+            {
+
                 try
                 {
-                    processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;                    
+                    Interlocked.Decrement(ref concurrentRequestCount);
+                    processor.ReceiveFeedbackDataComplete -= this.Processor_ReceiveFeedbackDataComplete;
+                    //processor.simplePerf.PerfClientRequestSuccessPercentCounter.RawValue = ComputeRequestSuccessPercent();
                 }
-                finally { }                
+                finally { }
             }
-           
+
             return null;
         }      
 
@@ -167,7 +195,7 @@ namespace TcpFramework.Client
                 LogManager.Log(string.Format("{0} occur error", e.MessageTokenId), feedbackErr);
             }
             finally {
-
+                
                 manualResetEvent.Set();   
             }                                       
         }                   
@@ -175,6 +203,6 @@ namespace TcpFramework.Client
         private static int GetNewTokenId()
         {
             return Interlocked.Increment(ref msgTokenId);
-        }    
+        }       
     }
 }
