@@ -32,8 +32,8 @@ namespace TcpFramework.Client
         private object lockConcurrentStepOne = new object();
         private object lockConcurrentStepTwo = new object();
         private int maxConnectionCount = 0;
-        private int currentConnectionCount = 0;        
-
+        private int currentConnectionCount = 0;
+      
         //每个连接最多能发送的消息数量，一般为一次一条
         private int numberMessagesOfPerConnection;
         //一般为整型int的四个字节
@@ -123,7 +123,7 @@ namespace TcpFramework.Client
             StartConnect(connectEventArgs, serverEndPoint);
 
             return SendStatus.OK_ON_OPENNEW;
-        }        
+        }   
 
         private bool ReuseHeartBeatSAEA(List<Message> messages,int listenerPort) {
             
@@ -131,21 +131,26 @@ namespace TcpFramework.Client
             try {
 
                 if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(listenerPort))
+                {                    
                     return false;
+                }
 
                 SocketAsyncEventArgPool thisPortSocketPool = dictPoolOfHeartBeatRecSendEventArgs[listenerPort];
-                
-
-                while (!thisPortSocketPool.IsEmpty)
+                                
+                //while (!thisPortSocketPool.IsEmpty)                
+                while (true) 
                 {
                     cleanSignal.Reset();
 
+                    //鉴于IsEmpty有问题，确保有Pop尝试!
                     SocketAsyncEventArgs arg = thisPortSocketPool.Pop();
 
                     if (arg == null)
                     {
-                        if (thisPortSocketPool.IsEmpty)
-                        {                            
+                        if (thisPortSocketPool.IsEmpty)                        
+                        {
+                            //
+                            LogManager.LogTraceInfo(string.Format("port:{0} 's pool empty now with count:{1}", listenerPort,thisPortSocketPool.Count));
                             return false;
                         }
                         else
@@ -156,7 +161,7 @@ namespace TcpFramework.Client
                     }
                     
                     simplePerf.PerfClientReuseConnectionCounter.Increment();
-                    simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                    simplePerf.PerfClientIdleConnectionCounter.Decrement();                    
 
                     ClientUserToken userToken = (ClientUserToken)arg.UserToken;
                     userToken.CreateNewSendDataHolder();
@@ -347,73 +352,92 @@ namespace TcpFramework.Client
                 }
             }
             else
-                dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerPort].Push(e);                
+                dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerPort].Push(e);
+            
         }
 
         private void RunHeartBeat() {
 
-            int waitTime = 180000;            
+            int waitTime = 180000;  
+            bool alreadyChecked = false;
 
             while (true) {
-                
-                foreach (int portKey in dictPoolOfHeartBeatRecSendEventArgs.Keys) {
 
-                    SocketAsyncEventArgPool thisPortKey = dictPoolOfHeartBeatRecSendEventArgs[portKey];
+                if (alreadyChecked) {
 
-                    if (thisPortKey.IsEmpty)
-                    {                        
-                        continue;
+                    if (!DateTime.Now.Hour.Equals(3)) {
+
+                        alreadyChecked = false;
                     }
 
-                    Stopwatch sw = new Stopwatch();
+                    Thread.Sleep(waitTime);
+                }
 
-                    sw.Start();
-                    bool existNeedReuseItem = false;
+                if (DateTime.Now.Equals(3)) {
 
-                    cleanSignal.WaitOne();
-                    
-                    SocketAsyncEventArgs heartBeatSAEA = thisPortKey.Pop();
-                    List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
-
-                    while (!thisPortKey.IsEmpty)
+                    foreach (int portKey in dictPoolOfHeartBeatRecSendEventArgs.Keys)
                     {
-                        if (heartBeatSAEA != null)
+
+                        SocketAsyncEventArgPool thisPortKey = dictPoolOfHeartBeatRecSendEventArgs[portKey];
+
+                        if (thisPortKey.IsEmpty)
                         {
-                            ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
-
-                            if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120)
-                            {
-                                listRepush.Add(heartBeatSAEA);
-                                existNeedReuseItem = true;
-                            }
-                            else
-                            {
-                                //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
-                                StartDisconnect(heartBeatSAEA);
-                                simplePerf.PerfClientIdleConnectionCounter.Decrement();
-                            }
+                            continue;
                         }
 
-                        if (existNeedReuseItem) {
+                        Stopwatch sw = new Stopwatch();
 
-                            //别因为等待信号，导致可复用连接长时间无效闲置
-                            if (sw.ElapsedMilliseconds > 100)
-                                break;
-                        }
+                        sw.Start();
+                        bool existNeedReuseItem = false;
 
                         cleanSignal.WaitOne();
-                        heartBeatSAEA = thisPortKey.Pop();
+
+                        SocketAsyncEventArgs heartBeatSAEA = thisPortKey.Pop();
+                        List<SocketAsyncEventArgs> listRepush = new List<SocketAsyncEventArgs>();
+
+                        while (!thisPortKey.IsEmpty)
+                        {
+                            if (heartBeatSAEA != null)
+                            {
+                                ClientUserToken userToken = (ClientUserToken)heartBeatSAEA.UserToken;
+
+                                if (DateTime.Now.Subtract(userToken.startTime).TotalSeconds < 120)
+                                {
+                                    listRepush.Add(heartBeatSAEA);
+                                    existNeedReuseItem = true;
+                                }
+                                else
+                                {
+                                    //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
+                                    StartDisconnect(heartBeatSAEA);
+                                    simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                                }
+                            }
+
+                            if (existNeedReuseItem)
+                            {
+                                //别因为等待信号，导致可复用连接长时间无效闲置
+                                if (sw.ElapsedMilliseconds > 100)
+                                    break;
+                            }
+
+                            cleanSignal.WaitOne();
+                            heartBeatSAEA = thisPortKey.Pop();
+                        }
+
+                        if (listRepush.Count > 1)
+                            thisPortKey.BatchPush(listRepush.ToArray());
+                        else if (listRepush.Count.Equals(1))
+                            thisPortKey.Push(listRepush[0]);
                     }
 
-                    if (listRepush.Count > 1)
-                        thisPortKey.BatchPush(listRepush.ToArray());
-                    else if (listRepush.Count.Equals(1))
-                        thisPortKey.Push(listRepush[0]);
-                }
+                    alreadyChecked = true;
+
+                }                
                 
                 Thread.Sleep(waitTime);
             }
-        }
+        }      
 
         private void StartReceive(SocketAsyncEventArgs receiveSendEventArgs)
         {            

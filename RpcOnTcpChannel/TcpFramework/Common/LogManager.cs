@@ -8,8 +8,9 @@ using log4net;
 namespace TcpFramework.Common
 {    
     internal class LogManager
-    {
+    {        
         private static ILog log = log4net.LogManager.GetLogger(typeof(LogManager));
+        private static ILog logDeubg = log4net.LogManager.GetLogger("trace_tcp_framework");
 
         internal static void Log(string message, Exception e = null, bool isDebug = false)
         {
@@ -30,6 +31,11 @@ namespace TcpFramework.Common
                 else
                     log.Info(message);
             }
+        }
+
+        internal static void LogTraceInfo(string message) { 
+
+            logDeubg.Info(message);
         }
 
         private static string GetInnerExceptionInfo(Exception e)

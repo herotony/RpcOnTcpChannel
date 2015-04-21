@@ -1,4 +1,5 @@
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\bin\Release\CustomPerformanceCounter.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\bin\Release\CustomPerformanceCounter.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\obj\Release\CustomPerformanceCounter.csprojResolveAssemblyReference.cache
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\obj\Release\CustomPerformanceCounter.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\CustomPerformanceCounter\obj\Release\CustomPerformanceCounter.pdb
