@@ -425,10 +425,13 @@ namespace TcpFramework.Client
                             heartBeatSAEA = thisPortKey.Pop();
                         }
 
-                        if (listRepush.Count > 1)
-                            thisPortKey.BatchPush(listRepush.ToArray());
-                        else if (listRepush.Count.Equals(1))
-                            thisPortKey.Push(listRepush[0]);
+                        for (int i = 0; i < listRepush.Count; i++)
+                            thisPortKey.Push(listRepush[i]);
+
+                        //if (listRepush.Count > 1)
+                        //    thisPortKey.BatchPush(listRepush.ToArray());
+                        //else if (listRepush.Count.Equals(1))
+                        //    thisPortKey.Push(listRepush[0]);
                     }
 
                     alreadyChecked = true;
