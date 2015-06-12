@@ -25,7 +25,7 @@ namespace TestTcpFramework
 
                 Console.WriteLine("start");
 
-                int testCount = 30000;
+                int testCount = 1;
                 int faileCount = 0;
                 int successCount = 0;
 

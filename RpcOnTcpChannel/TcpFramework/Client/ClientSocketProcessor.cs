@@ -19,7 +19,7 @@ namespace TcpFramework.Client
         public event EventHandler<ReceiveFeedbackDataCompleteEventArg> ReceiveFeedbackDataComplete;                       
 
         private bool supportKeepAlive = false;
-        private Dictionary<int,SocketAsyncEventArgPool> dictPoolOfHeartBeatRecSendEventArgs;
+        private Dictionary<string,SocketAsyncEventArgPool> dictPoolOfHeartBeatRecSendEventArgs;
         private ManualResetEvent cleanSignal = new ManualResetEvent(false);
         private Thread thHeartBeat;
 
@@ -57,7 +57,7 @@ namespace TcpFramework.Client
             
             if (this.supportKeepAlive)
             {
-                dictPoolOfHeartBeatRecSendEventArgs = new Dictionary<int, SocketAsyncEventArgPool>();
+                dictPoolOfHeartBeatRecSendEventArgs = new Dictionary<string, SocketAsyncEventArgPool>();
                 thHeartBeat = new Thread(new ThreadStart(RunHeartBeat));
                 thHeartBeat.IsBackground = true;
                 thHeartBeat.Start();
@@ -68,7 +68,7 @@ namespace TcpFramework.Client
         {           
             if (supportKeepAlive) {
 
-                if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
+                if (ReuseHeartBeatSAEA(messages, string.Format("{0}_{1}",serverEndPoint.Address,serverEndPoint.Port)))
                 {                    
                     return SendStatus.OK_ON_STEPONE_REUSE;
                 }               
@@ -87,7 +87,7 @@ namespace TcpFramework.Client
 
             if (supportKeepAlive) {
 
-                if (ReuseHeartBeatSAEA(messages, serverEndPoint.Port))
+                if (ReuseHeartBeatSAEA(messages, string.Format("{0}_{1}",serverEndPoint.Address,serverEndPoint.Port)))
                 {
                     return SendStatus.OK_ON_STEPTWO_REUSE;
                 }  
@@ -125,17 +125,16 @@ namespace TcpFramework.Client
             return SendStatus.OK_ON_OPENNEW;
         }   
 
-        private bool ReuseHeartBeatSAEA(List<Message> messages,int listenerPort) {
+        private bool ReuseHeartBeatSAEA(List<Message> messages,string serverEndPointKey) {
             
-
             try {
 
-                if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(listenerPort))
+                if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(serverEndPointKey))
                 {                    
                     return false;
                 }
 
-                SocketAsyncEventArgPool thisPortSocketPool = dictPoolOfHeartBeatRecSendEventArgs[listenerPort];
+                SocketAsyncEventArgPool thisPortSocketPool = dictPoolOfHeartBeatRecSendEventArgs[serverEndPointKey];
                                 
                 //while (!thisPortSocketPool.IsEmpty)                
                 while (true) 
@@ -148,9 +147,8 @@ namespace TcpFramework.Client
                     if (arg == null)
                     {
                         if (thisPortSocketPool.IsEmpty)                        
-                        {
-                            //
-                            LogManager.LogTraceInfo(string.Format("port:{0} 's pool empty now with count:{1}", listenerPort,thisPortSocketPool.Count));
+                        {                            
+                            LogManager.LogTraceInfo(string.Format("poolKey:{0} 's pool empty now with count:{1}", serverEndPointKey, thisPortSocketPool.Count));
                             return false;
                         }
                         else
@@ -178,7 +176,7 @@ namespace TcpFramework.Client
             }
             catch(Exception pickErr) {
 
-                LogManager.Log(string.Format("pick socket from port:{0} occur error!", listenerPort), pickErr);
+                LogManager.Log(string.Format("pick socket from poolKey:{0} occur error!", serverEndPointKey), pickErr);
             }
             finally {               
 
@@ -337,22 +335,22 @@ namespace TcpFramework.Client
             
             simplePerf.PerfClientIdleConnectionCounter.Increment();
 
-            if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerPort))
+            if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerEndPointKey))
             {
                 lock (this)
                 {
-                    if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerPort))
+                    if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerEndPointKey))
                     {
                         SocketAsyncEventArgPool pool = new SocketAsyncEventArgPool();
                         pool.Push(e);
-                        dictPoolOfHeartBeatRecSendEventArgs.Add(userToken.ServerPort, pool);
+                        dictPoolOfHeartBeatRecSendEventArgs.Add(userToken.ServerEndPointKey, pool);
                     }
                     else
-                        dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerPort].Push(e);
+                        dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerEndPointKey].Push(e);
                 }
             }
             else
-                dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerPort].Push(e);
+                dictPoolOfHeartBeatRecSendEventArgs[userToken.ServerEndPointKey].Push(e);
             
         }
 
@@ -375,10 +373,10 @@ namespace TcpFramework.Client
 
                 if (DateTime.Now.Equals(3)) {
 
-                    foreach (int portKey in dictPoolOfHeartBeatRecSendEventArgs.Keys)
+                    foreach (string poolKey in dictPoolOfHeartBeatRecSendEventArgs.Keys)
                     {
 
-                        SocketAsyncEventArgPool thisPortKey = dictPoolOfHeartBeatRecSendEventArgs[portKey];
+                        SocketAsyncEventArgPool thisPortKey = dictPoolOfHeartBeatRecSendEventArgs[poolKey];
 
                         if (thisPortKey.IsEmpty)
                         {
@@ -553,7 +551,7 @@ namespace TcpFramework.Client
                 ClientUserToken receiveSendToken = (ClientUserToken)receiveSendEventArgs.UserToken;
 
                 receiveSendToken.sendDataHolder.SetSendMessage(theConnectingToken.ArrayOfMessageReadyToSend);
-                receiveSendToken.ServerPort = theConnectingToken.ServerPort;
+                receiveSendToken.ServerEndPointKey = theConnectingToken.ServerEndPointKey;
 
                 MessagePreparer.GetDataToSend(receiveSendEventArgs);
 
@@ -629,7 +627,7 @@ namespace TcpFramework.Client
             try {
                 
                 ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;
-                theConnectingToken.ServerPort = serverEndPoint.Port;
+                theConnectingToken.ServerEndPointKey = string.Format("{0}_{1}", serverEndPoint.Address,serverEndPoint.Port);
 
                 connectEventArgs.RemoteEndPoint = serverEndPoint;
                 connectEventArgs.AcceptSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);                            

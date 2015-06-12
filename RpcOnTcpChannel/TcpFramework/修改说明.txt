@@ -63,6 +63,12 @@ server:
    算了，时间有限，简单通过复制一个等同于ClientSocketManager.cs的LogClientSocketManager.cs配合log_socketsetting.txt单独用于http下的日志记录，未来再细改为通过配置修改支持业务扩展！
    实际上相关的计数器也要单独修改才能准确计数...五月份完成最终完善版吧。
 
+20150612：
+  
+   HttpManger.Client记录所有返回为非socket:ok的消息体的日志。
+   TcpFramework.Client采用轮询机制来分配请求连接，而不再是随机机制，每个服务实例作为key来保存该实例下的所有连接。
+
+
    
 
 

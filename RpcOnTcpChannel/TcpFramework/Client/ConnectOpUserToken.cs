@@ -9,6 +9,6 @@ namespace TcpFramework.Client
     internal class ConnectOpUserToken
     {
         internal List<Message> ArrayOfMessageReadyToSend{get;set;}
-        internal int ServerPort;
+        internal string ServerEndPointKey;
     }
 }

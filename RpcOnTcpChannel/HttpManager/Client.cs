@@ -46,6 +46,8 @@ namespace HttpManager
                     }
                     else {
 
+                        logClient.ErrorFormat("cmd:{0} fail in status:{1} request:{2}", command, message, requestString);
+
                         return message;
                     }
                 }
@@ -66,7 +68,11 @@ namespace HttpManager
                             return "socket:failbynull";
                     }
                     else
+                    {
+                        logClient.ErrorFormat("cmd:{0} fail in status:{1} request:{2}", command, message, requestString);
+
                         return message;
+                    }
                 }
                 else
                     return "failbyunknown";

@@ -7,6 +7,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading;
 using System.Diagnostics;
+using System.Net;
 
 using TcpFramework.Common;
 
@@ -29,7 +30,9 @@ namespace TcpFramework.Client
         private static  ClientSocketProcessor processor;
         private static Random rand = new Random();
         private static int ServerCount = 0;
-
+        private static object lockForPickObject = new object();
+        private static int prevPickIndex = 0;
+        private static bool isFirstPickOver = false;
         private static int concurrentRequestCount = 0;       
 
         public delegate byte[] PickResult(int tokenId);
@@ -125,7 +128,8 @@ namespace TcpFramework.Client
                 List<Message> list = new List<Message>();
                 list.Add(_message);
                 
-                System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
+                //System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
+                IPEndPoint _serverEndPoint = loopPickServerEndPoint();
 
                 Interlocked.Increment(ref concurrentRequestCount);
                 processor.simplePerf.PerfClientRequestTotalCounter.Increment();
@@ -195,7 +199,35 @@ namespace TcpFramework.Client
                 
                 manualResetEvent.Set();   
             }                                       
-        }                   
+        }
+
+        private IPEndPoint loopPickServerEndPoint() {            
+            
+            lock (lockForPickObject) {
+
+                if (!isFirstPickOver)
+                {
+                    isFirstPickOver = true;
+                    prevPickIndex = 0;
+
+                    return clientSetting.serverEndPoints[0];
+                }
+                else {
+
+                    int currentIndex = prevPickIndex + 1;
+                    if (currentIndex >= ServerCount)
+                    {
+                        prevPickIndex = 0;
+                        return clientSetting.serverEndPoints[0];
+                    }
+                    else
+                    {
+                        prevPickIndex = currentIndex;
+                        return clientSetting.serverEndPoints[currentIndex];
+                    }
+                }
+            }            
+        }
 
         private static int GetNewTokenId()
         {

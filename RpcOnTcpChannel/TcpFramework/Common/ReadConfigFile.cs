@@ -227,7 +227,9 @@ namespace TcpFramework.Common
             {
 
                 if (!IPAddress.TryParse(arr[0], out ipAddr))
+                {
                     return null;
+                }
             }
             else
                 ipAddr = IPAddress.Any;
