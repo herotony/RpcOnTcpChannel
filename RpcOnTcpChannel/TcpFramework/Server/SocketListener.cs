@@ -198,7 +198,8 @@ namespace TcpFramework.Server
 
             if (receiveSendEventArgs.SocketError != SocketError.Success)
             {
-                LogManager.Log(string.Format("ProcessReceive ERROR: {0}, receiveSendToken sessionid:{1}", receiveSendEventArgs.SocketError, receiveSendToken.serverSession.SessionId));
+                if(receiveSendEventArgs.SocketError!= SocketError.ConnectionReset)
+                    LogManager.Log(string.Format("ProcessReceive ERROR: {0}, receiveSendToken sessionid:{1}", receiveSendEventArgs.SocketError, receiveSendToken.serverSession.SessionId));
                 
                 receiveSendToken.Reset();
                 CloseClientSocket(receiveSendEventArgs);

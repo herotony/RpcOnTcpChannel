@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
+using System.Net;
 
 using log4net;
 using TcpFramework.Client;
@@ -17,6 +18,10 @@ namespace TestTcpFramework
 
         static void Main(string[] args)
         {
+            //RunDns();
+            //Console.ReadKey();
+            //return;
+
             int totalLoopcount = 0;        
 
             while (true) {
@@ -46,7 +51,13 @@ namespace TestTcpFramework
                         Stopwatch _sw = new Stopwatch();
                         _sw.Start();
                         //byte[] result = ClientSocketManager.SendRequest(Encoding.UTF8.GetBytes(string.Format("秦琼战关公! on id:{0}", rnd.Next(10000))), ref message);
-                        ClientSocketManager smgr = new ClientSocketManager();
+                        //ClientSocketManager smgr = new ClientSocketManager();
+
+                        DeploySocketManager smgr = new DeploySocketManager();
+
+                        
+                        
+
                         byte[] result = smgr.SendRequest(Encoding.UTF8.GetBytes(string.Format("秦琼战关公! on id:{0}", rnd.Next(10000))), ref message);
 
                         if (result == null)
@@ -113,6 +124,40 @@ namespace TestTcpFramework
             }                       
 
             Console.ReadKey();
+
+        }
+
+        private static void RunDns() {
+
+            int loopCount = 100;
+
+            
+
+            Stopwatch sw = new Stopwatch();
+            Stopwatch swInner = new Stopwatch();
+            sw.Start();
+            for (int j = 0; j < loopCount; j++) {
+
+                string h = Console.ReadLine();
+                swInner.Restart();
+
+                
+
+                IPAddress[] arrIP = Dns.GetHostAddresses(h);
+
+                for (int i = 0; i < arrIP.Length; i++)
+                {
+                    Console.WriteLine("ip [{0}] :{1}", i, arrIP[i]);
+                }
+
+                swInner.Stop();
+                Console.WriteLine("single consume:{0} ms ip count:{1}", swInner.ElapsedMilliseconds,arrIP.Length);
+            }
+
+            sw.Stop();
+            Console.WriteLine("total consume:{0} ms", sw.ElapsedMilliseconds);
+            
+
 
         }
     }

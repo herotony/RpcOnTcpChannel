@@ -14,6 +14,7 @@ namespace TcpFramework.Common
         Stack<int> freeIndexPool;
         int currentIndex;
         int bufferBytesAllocatedForEachSaea;
+        bool initPhrase = true;
 
         //totalBytes % totalBufferBytesInEachSaeaObject 必须整除才合理
         public BufferManager(int totalBytes, int totalBufferBytesInEachSaeaObject)
@@ -30,15 +31,28 @@ namespace TcpFramework.Common
             this.bufferBlock = new byte[totalBytesInBufferBlock];
         }
 
+        internal void SetInitComplete() {
+
+            initPhrase = false;
+        }
+
         //为具体的，正在使用中的socket分配固定区域
         internal bool SetBuffer(SocketAsyncEventArgs args)
-        {
-
+        {            
+            
             if (this.freeIndexPool.Count > 0)
             {
-                args.SetBuffer(this.bufferBlock, this.freeIndexPool.Pop(), this.bufferBytesAllocatedForEachSaea);
+                lock (this) {
+
+                    if (this.freeIndexPool.Count > 0)
+                        args.SetBuffer(this.bufferBlock, this.freeIndexPool.Pop(), this.bufferBytesAllocatedForEachSaea);
+                    else
+                        return false;
+                }
+                
             }
-            else
+            
+            if(initPhrase)
             {
                 if ((totalBytesInBufferBlock - this.bufferBytesAllocatedForEachSaea) < this.currentIndex)
                 {
@@ -47,6 +61,7 @@ namespace TcpFramework.Common
                 args.SetBuffer(this.bufferBlock, this.currentIndex, this.bufferBytesAllocatedForEachSaea);
                 this.currentIndex += this.bufferBytesAllocatedForEachSaea;
             }
+
             return true;
         }
 

@@ -58,7 +58,7 @@ namespace TcpFramework.Common
                     this.PerfClientIdleConnectionCounter = new PerformanceCounter(this.CategoryName, this.ClientIdleConnectionCounterName, "client_idle_connection_" + processName + "(" + processId + ")" + AppendSuffixName(specialName), false);
                     this.PerfClientRequestSuccessCounter = new PerformanceCounter(this.CategoryName, this.ClientRequestSuccessCounterName, "client_request_success_persecond_" + processName + "(" + processId + ")" + AppendSuffixName(specialName), false);
                     this.PerfClientRequestFailCounter = new PerformanceCounter(this.CategoryName, this.ClientRequestFailCounterName, "client_request_fail_persecond_" + processName + "(" + processId + ")" + AppendSuffixName(specialName), false);
-                    this.PerfClientRequestTotalCounter = new PerformanceCounter(this.CategoryName, this.ClientRequestTotalCounterName, "client_request_total_persecond_" + processName + "(" + processId + ")" + AppendSuffixName(specialName), false);
+                    this.PerfClientRequestTotalCounter = new PerformanceCounter(this.CategoryName, this.ClientRequestTotalCounterName, "client_request_total_persecond_" + processName + "(" + processId + ")" + AppendSuffixName(specialName), false);                    
                 }
                 else
                 {                    
