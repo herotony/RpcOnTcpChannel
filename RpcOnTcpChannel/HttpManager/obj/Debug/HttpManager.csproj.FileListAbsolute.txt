@@ -1,0 +1,8 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Debug\HttpManager.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Debug\HttpManager.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Debug\log4net.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Debug\TcpFramework.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\bin\Debug\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\obj\Debug\HttpManager.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\obj\Debug\HttpManager.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\HttpManager\obj\Debug\HttpManager.pdb

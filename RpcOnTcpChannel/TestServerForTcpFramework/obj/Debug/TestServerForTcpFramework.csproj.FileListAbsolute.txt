@@ -5,6 +5,6 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debu
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\log4net.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\TcpFramework.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\bin\Debug\TcpFramework.pdb
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.csprojResolveAssemblyReference.cache
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.exe
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TestServerForTcpFramework\obj\Debug\TestServerForTcpFramework.csprojResolveAssemblyReference.cache

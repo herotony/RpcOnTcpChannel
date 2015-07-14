@@ -11,14 +11,19 @@ namespace HttpManager
     public class Server
     {
         private static ILog logServer = LogManager.GetLogger(typeof(Server));
-        public static string GetRequestString(byte[] inputData, ref string command) {
 
+        public static string GetRequestString(byte[] inputData,ref string command,ref string ipAddress,ref string userAgent,ref bool isNeedEncrypt)
+        {
             try {
 
-                int commandLength = BitConverter.ToInt32(inputData, 0);
-                command = Encoding.UTF8.GetString(inputData, 4, commandLength);
+                string[] arrInputParam = DataManager.DecodeByteData(inputData);
 
-                return Encoding.UTF8.GetString(inputData, 4 + commandLength, inputData.Length - 4 - commandLength);
+                command = arrInputParam[1];
+                ipAddress = arrInputParam[2];
+                userAgent = arrInputParam[3];
+                isNeedEncrypt = arrInputParam[4].Equals("true");
+
+                return arrInputParam[5];
             }
             catch (Exception serverErr) {
 

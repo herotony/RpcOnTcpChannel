@@ -1,0 +1,12 @@
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\HttpManager.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\nunit.framework.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\log4net.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\TcpFramework.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\HttpManager.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\nunit.framework.xml
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\TcpFramework.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\obj\Debug\NUnitTest.csprojResolveAssemblyReference.cache
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\obj\Debug\NUnitTest.dll
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\obj\Debug\NUnitTest.pdb
