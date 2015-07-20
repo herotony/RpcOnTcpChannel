@@ -55,6 +55,8 @@ namespace TcpFramework.Client
                     }
                 }
             }
+            else
+                return;
 
             Stopwatch sw = new Stopwatch();
 
