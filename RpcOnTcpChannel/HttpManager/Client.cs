@@ -12,8 +12,6 @@ namespace HttpManager
     {
         private static ILog logClient = LogManager.GetLogger(typeof(Client));
 
-        public  enum route { common, log };
-
         public static string SendRequest(string command, string requestString) {
 
             try {
@@ -98,6 +96,47 @@ namespace HttpManager
             }
 
             return "fail";
+        }
+
+        public static string GetBizJsonString(string bizName, string requestJson) {
+
+            try {
+
+                Queue<ClientData> queue = new Queue<ClientData>();
+                int totalLength = 0;
+
+                totalLength = DataManager.PushClientDataToQueueAndFeedbackLength(queue, "3");
+                totalLength += DataManager.PushClientDataToQueueAndFeedbackLength(queue, "getbizjsonstring");
+                totalLength += DataManager.PushClientDataToQueueAndFeedbackLength(queue, bizName);
+                totalLength += DataManager.PushClientDataToQueueAndFeedbackLength(queue, requestJson);
+
+                byte[] sendData = DataManager.GetSendData(queue, totalLength);
+
+                ClientSocketManager csmgr = new ClientSocketManager();
+
+                string message = string.Empty;
+
+                byte[] retData = csmgr.SendRequest(sendData, ref message);
+
+                if (message.Equals("socket:ok"))
+                {
+                    if (retData != null && retData.Length > 8)
+                        return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
+                    else
+                        return "socket:failbynull";
+                }
+                else
+                {
+                    logClient.ErrorFormat("bizname:{0} fail in status:{1} requestjson:{2}", bizName, message, requestJson);
+                    return message.StartsWith("socket:")?message:string.Format("socket:{0}",message);
+                }               
+            }
+            catch (Exception bizJsonErr) {
+
+                logClient.Error(string.Format("GetBizJsonString异常!\r\nbizName:{0}\r\nrequestJson:{1}\r\nerr:{2}\r\nstackTrace:{3}\r\n", bizName, requestJson, bizJsonErr.Message, bizJsonErr.StackTrace), bizJsonErr);
+            }
+
+            return "socket:exception-fail";
         }
 
     }
