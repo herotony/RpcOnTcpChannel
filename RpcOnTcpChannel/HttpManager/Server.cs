@@ -12,6 +12,19 @@ namespace HttpManager
     {
         private static ILog logServer = LogManager.GetLogger(typeof(Server));
 
+        /// <summary>
+        /// arrParam[0]:mthodname
+        /// ...other anyway...
+        /// 
+        /// </summary>
+        /// <param name="inputData"></param>
+        /// <returns></returns>
+        public static string[] GetDataParamInfo(byte[] inputData) {
+
+            return DataManager.DecodeByteData(inputData);
+
+        }
+
         public static string GetRequestString(byte[] inputData,ref string command,ref string ipAddress,ref string userAgent,ref bool isNeedEncrypt)
         {
             try {
@@ -32,5 +45,7 @@ namespace HttpManager
 
             return null;
         }
+
+        
     }
 }
