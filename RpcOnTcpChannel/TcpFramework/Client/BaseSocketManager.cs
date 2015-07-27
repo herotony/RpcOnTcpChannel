@@ -40,7 +40,7 @@ namespace TcpFramework.Client
         
         internal virtual  ClientSetting GetLocalClientSetting() {
 
-            return ReadConfigFile.GetClientSetting();
+            return ReadConfigFile.GetClientSettingII(ReadConfigFile.ClientSettingType.HTTP);
         }
 
         private void Init() {
@@ -63,6 +63,7 @@ namespace TcpFramework.Client
             sw.Start();
 
             clientSetting = GetLocalClientSetting();
+       
             ServerCount = clientSetting.serverEndPoints.Length;
 
             timeOutByMS = clientSetting.timeOutByMS;
@@ -133,6 +134,7 @@ namespace TcpFramework.Client
         {
             try
             {
+                
                 Init();
 
                 int _tokenId = GetNewTokenId();
@@ -143,14 +145,15 @@ namespace TcpFramework.Client
                 this.messageTokenId = _tokenId;
 
                 processor.ReceiveFeedbackDataComplete += Processor_ReceiveFeedbackDataComplete;
-
+                
                 List<Message> list = new List<Message>();
                 list.Add(_message);
 
                 //System.Net.IPEndPoint _serverEndPoint = clientSetting.serverEndPoints[rand.Next(ServerCount)];
                 IPEndPoint _serverEndPoint = loopPickServerEndPoint();
-
+                
                 Interlocked.Increment(ref concurrentRequestCount);
+               
                 processor.simplePerf.PerfClientRequestTotalCounter.Increment();
 
                 LogManager.Log(string.Format("pick endpoint - addr:{0} port:{1}", _serverEndPoint.Address, _serverEndPoint.Port));

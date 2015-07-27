@@ -9,6 +9,7 @@ using TcpFramework.Client;
 using TcpFramework.Server;
 
 
+
 namespace TcpFramework.Common
 {
     internal class ReadConfigFile
@@ -26,7 +27,8 @@ namespace TcpFramework.Common
         private static int bufferSize = 0;
         private static int timeOutByMS = 0;
         private static bool useKeepAlive = true;
-        private static int numberSendCountPerConnection = 1;        
+        private static int numberSendCountPerConnection = 1;     
+   
 
         static ReadConfigFile() {            
                 
@@ -159,6 +161,13 @@ namespace TcpFramework.Common
             int actualBingoCount = 0;
 
             Dictionary<string, string> dictOriginalSetting = GetKeyValueSettingII();
+
+            if (dictOriginalSetting == null)
+            {
+                LogManager.Log("未能正确读取socketsetting.txt中的配置信息");
+                return null;
+            }
+
             IPEndPoint[] ipEPs = null;
 
             string keyHeadInfo = clientSettingType.ToString().ToLower()+"-";
@@ -166,70 +175,77 @@ namespace TcpFramework.Common
 
             if (selectDictKey.Count().Equals(0))
                 throw new ArgumentNullException(keyHeadInfo + "ClientSettings");
-            
+                       
+            try {
 
-            foreach (string key in selectDictKey.ToDictionary(p=>p.Key,p=>p.Value).Keys)
-            {
-                if (string.IsNullOrEmpty(key))
-                    continue;
-
-                string lowerKey = key.ToLower().Trim();
-                string value = dictOriginalSetting[key];
-
-                if (lowerKey.StartsWith(keyHeadInfo+"hostinfo"))
+                foreach (string key in selectDictKey.ToDictionary(p => p.Key, p => p.Value).Keys)
                 {
-                    string[] ipSetting = value.Split(',');
-                    ipEPs = new IPEndPoint[ipSetting.Length];
+                    if (string.IsNullOrEmpty(key))
+                        continue;
 
-                    for (int i = 0; i < ipEPs.Length; i++)
+                    string lowerKey = key.ToLower().Trim();
+                    string value = dictOriginalSetting[key];
+
+                    if (lowerKey.StartsWith(keyHeadInfo + "hostinfo"))
                     {
+                        string[] ipSetting = value.Split(',');
+                        ipEPs = new IPEndPoint[ipSetting.Length];
 
-                        IPEndPoint _IPInfo = ParseHost(ipSetting[i]);
-                        if (_IPInfo == null)
+                        for (int i = 0; i < ipEPs.Length; i++)
+                        {
+
+                            IPEndPoint _IPInfo = ParseHost(ipSetting[i]);
+                            if (_IPInfo == null)
+                                return null;
+
+                            ipEPs[i] = _IPInfo;
+                        }
+
+                        actualBingoCount++;
+                    }
+                    else if (lowerKey.StartsWith(keyHeadInfo + "connectsocket_count"))
+                    {
+                        if (!int.TryParse(value, out maxConnectSocketCount))
                             return null;
 
-                        ipEPs[i] = _IPInfo;
+                        actualBingoCount++;
+
                     }
+                    else if (lowerKey.StartsWith(keyHeadInfo + "datasocket_count"))
+                    {
+                        if (!int.TryParse(value, out maxDataSocketCount))
+                            return null;
 
-                    actualBingoCount++;
+                        actualBingoCount++;
+                    }
+                    else if (lowerKey.StartsWith(keyHeadInfo + "buffersize"))
+                    {
+                        if (!int.TryParse(value, out bufferSize))
+                            return null;
+
+                        actualBingoCount++;
+                    }
+                    else if (lowerKey.StartsWith(keyHeadInfo + "timeout"))
+                    {
+                        if (!int.TryParse(value, out timeOutByMS))
+                            return null;
+
+                        actualBingoCount++;
+                    }
+                    else if (lowerKey.StartsWith(keyHeadInfo + "keepalive"))
+                    {
+
+                        if (!bool.TryParse(value, out useKeepAlive))
+                            return null;
+
+                        actualBingoCount++;
+                    }
                 }
-                else if (lowerKey.StartsWith(keyHeadInfo+"connectsocket_count"))
-                {
-                    if (!int.TryParse(value, out maxConnectSocketCount))
-                        return null;
 
-                    actualBingoCount++;
+            }
+            catch (Exception pickSettingErr) {
 
-                }
-                else if (lowerKey.StartsWith(keyHeadInfo+"datasocket_count"))
-                {
-                    if (!int.TryParse(value, out maxDataSocketCount))
-                        return null;
-
-                    actualBingoCount++;
-                }
-                else if (lowerKey.StartsWith(keyHeadInfo+"buffersize"))
-                {
-                    if (!int.TryParse(value, out bufferSize))
-                        return null;
-
-                    actualBingoCount++;
-                }
-                else if (lowerKey.StartsWith(keyHeadInfo+"timeout"))
-                {
-                    if (!int.TryParse(value, out timeOutByMS))
-                        return null;
-
-                    actualBingoCount++;
-                }
-                else if (lowerKey.StartsWith(keyHeadInfo+"keepalive"))
-                {
-
-                    if (!bool.TryParse(value, out useKeepAlive))
-                        return null;
-
-                    actualBingoCount++;
-                }
+                LogManager.Log(string.Format("分析{0}配置错误", clientSettingType), pickSettingErr);
             }
 
             if (actualBingoCount.Equals(shouldBingoCount))
@@ -261,50 +277,60 @@ namespace TcpFramework.Common
 
             Dictionary<string, string> dictKeyValueSetting = new Dictionary<string, string>();
 
-            string content = string.Empty;
+            try {
 
-            using (FileStream fs = new FileStream(path + fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                StreamReader reader = new StreamReader(fs);
-                content = reader.ReadToEnd();
-            }
+                string content = string.Empty;
 
-            if (string.IsNullOrEmpty(content))
-                return null;
-
-            string[] lines = content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (lines == null || lines.Length.Equals(0))
-                return null;
-
-            string typeKey = string.Empty;
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string[] configInfo = lines[i].Split(':');
-
-                if (configInfo.Length < 2)
-                    continue;
-
-                if (configInfo[0].Equals(configInfo[1])) {
-
-                    typeKey = configInfo[0];
-
-                    if (!IsValidTypeKey(typeKey))
-                        typeKey = string.Empty;
-
-                    continue;
+                using (FileStream fs = new FileStream(path + fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    StreamReader reader = new StreamReader(fs);
+                    content = reader.ReadToEnd();
                 }
 
-                if (string.IsNullOrEmpty(typeKey))
-                    continue;
+                if (string.IsNullOrEmpty(content))
+                    return null;
 
-                string entireKey = typeKey + "-" + configInfo[0];
+                string[] lines = content.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (dictKeyValueSetting.ContainsKey(entireKey))
-                    dictKeyValueSetting[entireKey] = configInfo[1];
-                else
-                    dictKeyValueSetting.Add(entireKey, configInfo[1]);
+                if (lines == null || lines.Length.Equals(0))
+                    return null;
+
+                string typeKey = string.Empty;
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string[] configInfo = lines[i].Split(':');
+
+                    if (configInfo.Length < 2)
+                        continue;
+
+                    if (configInfo[0].Equals(configInfo[1]))
+                    {
+
+                        typeKey = configInfo[0];
+
+                        if (!IsValidTypeKey(typeKey))
+                            typeKey = string.Empty;
+
+                        continue;
+                    }
+
+                    if (string.IsNullOrEmpty(typeKey))
+                        continue;
+
+                    string entireKey = typeKey + "-" + configInfo[0];
+
+                    if (dictKeyValueSetting.ContainsKey(entireKey))
+                        dictKeyValueSetting[entireKey] = configInfo[1];
+                    else
+                        dictKeyValueSetting.Add(entireKey, configInfo[1]);
+                }
+
+            }
+            catch (Exception getKeyValueErr) {
+
+                LogManager.Log(string.Format("Parse {0} Error", path + fileName), getKeyValueErr);
+                dictKeyValueSetting.Clear();
             }
 
             return dictKeyValueSetting.Count > 0 ? dictKeyValueSetting : null;
