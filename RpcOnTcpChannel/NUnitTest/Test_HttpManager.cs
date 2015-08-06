@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 using NUnit.Framework;
 using HttpManager;
+using log4net;
 
 namespace NUnitTest
 {
     [TestFixture]
     public class Test_HttpManager 
     {
-        [Test]
+        //[Test]
         public void TestEncodeDecodeData() {
 
             Queue<ClientData> queue = new Queue<ClientData>();
@@ -37,7 +38,7 @@ namespace NUnitTest
             Assert.AreEqual("send5r\"11\"e5quest_1", tt[4]);
         }
 
-        [Test]
+        //[Test]
         public void TestServerDecodeData() {
 
             Queue<ClientData> queue = new Queue<ClientData>();
@@ -64,6 +65,15 @@ namespace NUnitTest
             Assert.AreEqual(".netfrmawork;ipad;don'tknow", ua);
             Assert.AreEqual(true, isneedencrypt);
             Assert.AreEqual("<req cmd=\"fint\">仅仅是测试</req>", reqstr);
+        }
+
+        [Test]
+        public void TestSendDataTo63() {
+
+            string result = HttpManager.Client.GetBizJsonString("test", "123");
+
+            Assert.AreEqual("ok", result);
+
         }
     }
 }

@@ -10,3 +10,5 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\TcpFramework.p
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\obj\Debug\NUnitTest.csprojResolveAssemblyReference.cache
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\obj\Debug\NUnitTest.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\obj\Debug\NUnitTest.pdb
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\socketsetting.txt
+D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.dll.config
