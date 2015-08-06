@@ -38,6 +38,8 @@ namespace TcpFramework.Client
 
         private static bool isInit = false;
         
+        
+        
         internal virtual  ClientSetting GetLocalClientSetting() {
 
             return ReadConfigFile.GetClientSettingII(ReadConfigFile.ClientSettingType.HTTP);
@@ -49,81 +51,77 @@ namespace TcpFramework.Client
             {
                 lock (lockForPickObject)
                 {
-                    if (isInit)
+                    if (!isInit)
                     {
-                        return;
+                       
+                        Stopwatch sw = new Stopwatch();
+
+                        sw.Start();
+
+                        clientSetting = GetLocalClientSetting();
+
+                        ServerCount = clientSetting.serverEndPoints.Length;
+
+                        timeOutByMS = clientSetting.timeOutByMS;
+
+                        //初始化后，不可更改！
+                        bufferManager = new BufferManager(clientSetting.bufferSize * clientSetting.opsToPreAllocate * clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize * clientSetting.opsToPreAllocate);
+                        bufferManager.InitBuffer();
+
+                        //用于负责建立连接的saea，无关buffermanager，10个足够！这部分实际在ClientSocketProcessor中可以动态增加
+                        //poolOfConnectEventArgs = new SocketAsyncEventArgPool(clientSetting.maxSimultaneousConnectOps);
+                        poolOfConnectEventArgs = new SocketAsyncEventArgPool();
+
+                        //用于负责在建立好的连接上传输数据，涉及buffermanager，目前测试100～200个足够！这部分目前不支持动态增加！
+                        //因其buffermanager是事先分配好的一大块连续的固定内存区域，强烈建议不再更改，需要做好的就是事先的大小评估。
+                        //poolOfRecSendEventArgs = new SocketAsyncEventArgPool(clientSetting.numberOfSaeaForRecSend);
+                        poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
+
+                        //实际负责处理相关传输数据的关键核心类
+                        processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength, clientSetting.useKeepAlive, "bizclient");
+
+                        //由于不涉及buffermanager，可动态增长
+                        for (int i = 0; i < clientSetting.maxSimultaneousConnectOps; i++)
+                        {
+                            SocketAsyncEventArgs connectEventArg = new SocketAsyncEventArgs();
+                            connectEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(processor.IO_Completed);
+
+                            //关键负责标识saea和更关键的传输待发送的数据给传输用的saea。
+                            ConnectOpUserToken theConnectingToken = new ConnectOpUserToken();
+                            connectEventArg.UserToken = theConnectingToken;
+
+                            poolOfConnectEventArgs.Push(connectEventArg);
+                        }
+
+                        //涉及buffermanager，不可动态增长，需事先评估即可，负责实际的数据传输
+                        for (int i = 0; i < clientSetting.numberOfSaeaForRecSend; i++)
+                        {
+                            SocketAsyncEventArgs eventArgObjectForPool = new SocketAsyncEventArgs();
+
+                            //事先为每个saea分配固定不变的内存位置！
+                            bufferManager.SetBuffer(eventArgObjectForPool);
+
+                            eventArgObjectForPool.Completed += new EventHandler<SocketAsyncEventArgs>(processor.IO_Completed);
+
+                            ClientUserToken receiveSendToken = new ClientUserToken(eventArgObjectForPool.Offset, eventArgObjectForPool.Offset + clientSetting.bufferSize, clientSetting.receivePrefixLength, clientSetting.sendPrefixLength);
+
+                            //用于传递待发送的数据，一旦完成发送必须重新new一个。
+                            receiveSendToken.CreateNewSendDataHolder();
+                            eventArgObjectForPool.UserToken = receiveSendToken;
+
+                            poolOfRecSendEventArgs.Push(eventArgObjectForPool);
+                        }
+
+                        bufferManager.SetInitComplete();
+
+                        sw.Stop();
+
+                        LogManager.Log(string.Format("SocketClient Init by FirstInvoke Completed! ConsumeTime:{0} ms", sw.ElapsedMilliseconds));
+
+                        isInit = true;
                     }
                 }
             }
-            else
-                return;
-
-            Stopwatch sw = new Stopwatch();
-
-            sw.Start();
-
-            clientSetting = GetLocalClientSetting();
-       
-            ServerCount = clientSetting.serverEndPoints.Length;
-
-            timeOutByMS = clientSetting.timeOutByMS;
-
-            //初始化后，不可更改！
-            bufferManager = new BufferManager(clientSetting.bufferSize * clientSetting.opsToPreAllocate * clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize * clientSetting.opsToPreAllocate);
-            bufferManager.InitBuffer();
-
-            //用于负责建立连接的saea，无关buffermanager，10个足够！这部分实际在ClientSocketProcessor中可以动态增加
-            //poolOfConnectEventArgs = new SocketAsyncEventArgPool(clientSetting.maxSimultaneousConnectOps);
-            poolOfConnectEventArgs = new SocketAsyncEventArgPool();
-
-            //用于负责在建立好的连接上传输数据，涉及buffermanager，目前测试100～200个足够！这部分目前不支持动态增加！
-            //因其buffermanager是事先分配好的一大块连续的固定内存区域，强烈建议不再更改，需要做好的就是事先的大小评估。
-            //poolOfRecSendEventArgs = new SocketAsyncEventArgPool(clientSetting.numberOfSaeaForRecSend);
-            poolOfRecSendEventArgs = new SocketAsyncEventArgPool();
-
-            //实际负责处理相关传输数据的关键核心类
-            processor = new ClientSocketProcessor(poolOfConnectEventArgs, poolOfRecSendEventArgs, clientSetting.numberOfSaeaForRecSend, clientSetting.bufferSize, clientSetting.numberOfMessagesPerConnection, clientSetting.receivePrefixLength, clientSetting.useKeepAlive, "bizclient");
-
-            //由于不涉及buffermanager，可动态增长
-            for (int i = 0; i < clientSetting.maxSimultaneousConnectOps; i++)
-            {
-                SocketAsyncEventArgs connectEventArg = new SocketAsyncEventArgs();
-                connectEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(processor.IO_Completed);
-
-                //关键负责标识saea和更关键的传输待发送的数据给传输用的saea。
-                ConnectOpUserToken theConnectingToken = new ConnectOpUserToken();
-                connectEventArg.UserToken = theConnectingToken;
-
-                poolOfConnectEventArgs.Push(connectEventArg);
-            }
-
-            //涉及buffermanager，不可动态增长，需事先评估即可，负责实际的数据传输
-            for (int i = 0; i < clientSetting.numberOfSaeaForRecSend; i++)
-            {
-                SocketAsyncEventArgs eventArgObjectForPool = new SocketAsyncEventArgs();
-
-                //事先为每个saea分配固定不变的内存位置！
-                bufferManager.SetBuffer(eventArgObjectForPool);
-
-                eventArgObjectForPool.Completed += new EventHandler<SocketAsyncEventArgs>(processor.IO_Completed);
-
-                ClientUserToken receiveSendToken = new ClientUserToken(eventArgObjectForPool.Offset, eventArgObjectForPool.Offset + clientSetting.bufferSize, clientSetting.receivePrefixLength, clientSetting.sendPrefixLength);
-
-                //用于传递待发送的数据，一旦完成发送必须重新new一个。
-                receiveSendToken.CreateNewSendDataHolder();
-                eventArgObjectForPool.UserToken = receiveSendToken;
-
-                poolOfRecSendEventArgs.Push(eventArgObjectForPool);
-            }
-
-            bufferManager.SetInitComplete();
-
-            sw.Stop();
-
-            LogManager.Log(string.Format("SocketClient Init by FirstInvoke Completed! ConsumeTime:{0} ms", sw.ElapsedMilliseconds));
-
-
-            isInit = true; 
         }
 
         private int messageTokenId = 0;
