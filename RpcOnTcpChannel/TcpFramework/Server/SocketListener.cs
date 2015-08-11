@@ -93,6 +93,25 @@ namespace TcpFramework.Server
             simplePerf = new SimplePerformanceCounter(true,true);           
         }
 
+        private SimplePerformanceCounter GetSimplePerf()
+        {
+            if (this.simplePerf == null)
+            {
+                lock (this)
+                {
+                    if (this.simplePerf == null)
+                    {
+                        this.simplePerf = new SimplePerformanceCounter(true, true);
+
+                        if (this.simplePerf == null)
+                            throw new ArgumentNullException("simplePerf", "renew server simpPerf instance failed!");
+                    }
+                }
+            }
+
+            return this.simplePerf;
+        }
+
         private void ProcessAccept(SocketAsyncEventArgs acceptEventArgs)
         {
             if (acceptEventArgs.SocketError != SocketError.Success)
@@ -104,9 +123,9 @@ namespace TcpFramework.Server
                 HandleBadAccept(acceptEventArgs);
 
                 return;
-            }            
+            }
 
-            simplePerf.PerfConcurrentServerConnectionCounter.Increment();
+            GetSimplePerf().PerfConcurrentServerConnectionCounter.Increment();
            
             LoopToStartAccept();
 
@@ -371,7 +390,7 @@ namespace TcpFramework.Server
             // to be used by another client. This 
             this.poolOfRecSendEventArgs.Push(e);
 
-            simplePerf.PerfConcurrentServerConnectionCounter.Decrement();
+            GetSimplePerf().PerfConcurrentServerConnectionCounter.Decrement();
 
             //Release Semaphore so that its connection counter will be decremented.
             //This must be done AFTER putting the SocketAsyncEventArg back into the pool,

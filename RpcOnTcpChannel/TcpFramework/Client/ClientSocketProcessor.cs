@@ -24,6 +24,7 @@ namespace TcpFramework.Client
         private Thread thHeartBeat;
 
         internal SimplePerformanceCounter simplePerf;
+        internal string specialNameForSimplePerf = string.Empty;
         private SocketAsyncEventArgPool poolOfRecSendEventArgs;
         private SocketAsyncEventArgPool poolOfConnectEventArgs;        
            
@@ -44,6 +45,8 @@ namespace TcpFramework.Client
 
             this.poolOfConnectEventArgs = connectPool;
             this.poolOfRecSendEventArgs = recSendPool;
+
+            this.specialNameForSimplePerf = specialName;
             this.simplePerf = new SimplePerformanceCounter(true,false,specialName);
 
             this.maxConnectionCount = maxRecSendConnection;
@@ -62,7 +65,26 @@ namespace TcpFramework.Client
                 thHeartBeat.IsBackground = true;
                 thHeartBeat.Start();
             }
-        }                      
+        }
+
+        internal SimplePerformanceCounter GetSimplePerf() {
+
+            if (this.simplePerf == null)
+            {
+                lock (this)
+                {
+                    if (this.simplePerf == null)
+                    {
+                        this.simplePerf = new SimplePerformanceCounter(true, false, specialNameForSimplePerf);
+
+                        if (this.simplePerf == null)
+                            throw new ArgumentNullException("simplePerf","renew client simplePerf instance failed!");
+                    }  
+                }
+            }
+
+            return this.simplePerf;
+        }
 
         internal SendStatus SendMessage(List<Message> messages, IPEndPoint serverEndPoint,int currentRequestCount)
         {           
@@ -158,8 +180,8 @@ namespace TcpFramework.Client
                         }
                     }
                     
-                    simplePerf.PerfClientReuseConnectionCounter.Increment();
-                    simplePerf.PerfClientIdleConnectionCounter.Decrement();                    
+                    GetSimplePerf().PerfClientReuseConnectionCounter.Increment();
+                    GetSimplePerf().PerfClientIdleConnectionCounter.Decrement();                    
 
                     ClientUserToken userToken = (ClientUserToken)arg.UserToken;
                     userToken.CreateNewSendDataHolder();
@@ -329,11 +351,11 @@ namespace TcpFramework.Client
             if (!userToken.isReuseConnection)
                 userToken.isReuseConnection = true;
             else
-            {                
-                simplePerf.PerfClientReuseConnectionCounter.Decrement();                
+            {
+                GetSimplePerf().PerfClientReuseConnectionCounter.Decrement();                
             }
-            
-            simplePerf.PerfClientIdleConnectionCounter.Increment();
+
+            GetSimplePerf().PerfClientIdleConnectionCounter.Increment();
 
             if (!dictPoolOfHeartBeatRecSendEventArgs.ContainsKey(userToken.ServerEndPointKey))
             {
@@ -408,7 +430,7 @@ namespace TcpFramework.Client
                                 {
                                     //说明太闲了(完全空闲两分钟了!一直没被Pop出去复用),不用发所谓心跳，直接关闭
                                     StartDisconnect(heartBeatSAEA);
-                                    simplePerf.PerfClientIdleConnectionCounter.Decrement();
+                                    GetSimplePerf().PerfClientIdleConnectionCounter.Decrement();
                                 }
                             }
 
@@ -544,7 +566,7 @@ namespace TcpFramework.Client
                 }
 
                 Interlocked.Increment(ref currentConnectionCount);
-                simplePerf.PerfConcurrentClientConnectionCounter.Increment();                
+                GetSimplePerf().PerfConcurrentClientConnectionCounter.Increment();                
 
                 receiveSendEventArgs.AcceptSocket = connectEventArgs.AcceptSocket;                
 
@@ -685,7 +707,7 @@ namespace TcpFramework.Client
             {
                 this.maxConcurrentConnection.Release();
                 Interlocked.Decrement(ref currentConnectionCount);
-                simplePerf.PerfConcurrentClientConnectionCounter.Decrement();
+                GetSimplePerf().PerfConcurrentClientConnectionCounter.Decrement();
             }
         }
 

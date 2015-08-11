@@ -152,7 +152,7 @@ namespace TcpFramework.Client
                 
                 Interlocked.Increment(ref concurrentRequestCount);
                
-                processor.simplePerf.PerfClientRequestTotalCounter.Increment();
+                processor.GetSimplePerf().PerfClientRequestTotalCounter.Increment();
 
                 LogManager.Log(string.Format("pick endpoint - addr:{0} port:{1}", _serverEndPoint.Address, _serverEndPoint.Port));
 
@@ -168,7 +168,7 @@ namespace TcpFramework.Client
                         if (manualResetEvent.WaitOne(timeOutByMS))
                         {
                             message = "socket:ok";
-                            processor.simplePerf.PerfClientRequestSuccessCounter.Increment();
+                            processor.GetSimplePerf().PerfClientRequestSuccessCounter.Increment();
                             return result;
                         }
 
@@ -182,7 +182,7 @@ namespace TcpFramework.Client
                         break;
                 };
 
-                processor.simplePerf.PerfClientRequestFailCounter.Increment();
+                processor.GetSimplePerf().PerfClientRequestFailCounter.Increment();
             }
             catch (Exception sendErr)
             {
