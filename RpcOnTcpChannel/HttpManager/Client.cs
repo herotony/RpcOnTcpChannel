@@ -37,7 +37,10 @@ namespace HttpManager
                     if (retData != null && retData.Length > 8)
                         return Encoding.UTF8.GetString(retData, 8, retData.Length - 8);
                     else
+                    {
+                        logClient.ErrorFormat("cmd:{0} fail by return null data:{1} \r\nreq:{2}", command, message, requestString);
                         return "socket:failbynull";
+                    }
                 }
                 else
                 {
