@@ -126,6 +126,7 @@ namespace TcpFramework.Client
 
         private int messageTokenId = 0;
         private byte[] result = null;
+        private string pickEndPointDesc = string.Empty;
         private ManualResetEvent manualResetEvent = new ManualResetEvent(false);
 
         public byte[] SendRequest(byte[] sendData, ref string message)
@@ -155,6 +156,8 @@ namespace TcpFramework.Client
                 processor.GetSimplePerf().PerfClientRequestTotalCounter.Increment();
 
                 LogManager.Log(string.Format("pick endpoint - addr:{0} port:{1}", _serverEndPoint.Address, _serverEndPoint.Port));
+
+                pickEndPointDesc = string.Format("{0}:{1}",_serverEndPoint.Address,_serverEndPoint.Port);
 
                 SendStatus sendStatus = processor.SendMessage(list, _serverEndPoint, concurrentRequestCount);
 
@@ -214,6 +217,11 @@ namespace TcpFramework.Client
                 {
                     result = new byte[e.FeedbackData.Length];
                     Buffer.BlockCopy(e.FeedbackData, 0, result, 0, e.FeedbackData.Length);
+                }
+                else {
+
+                    LogManager.Log(string.Format("返回数据为NULL，请核查feedbackerror相关日志确定原因 : messageTokenId:{0}", e.MessageTokenId), new Exception(string.Format("客户端得到为NULL数据 on {0}",pickEndPointDesc)));
+
                 }
             }
             catch (Exception feedbackErr)

@@ -243,7 +243,7 @@ namespace TcpFramework.Client
 
                         this.maxConcurrentConnection.Release();   
                      
-                        LogManager.Log(string.Empty, new ArgumentException("\r\nError in I/O Completed, LastOperation: " + e.LastOperation));
+                        LogManager.Log(string.Empty, new ArgumentException("\r\nFeedbackError:Error in I/O Completed,返回数据主动设置为NULL, LastOperation: " + e.LastOperation));
                     }
                     break;
             }            
@@ -306,6 +306,9 @@ namespace TcpFramework.Client
                     ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
                     arg.MessageTokenId = receiveSendToken.messageTokenId;
                     arg.FeedbackData = receiveSendToken.dataMessageReceived;
+
+                    if (arg.FeedbackData == null)
+                        LogManager.Log("服务端返回数据为NULL!", new ArgumentException(string.Format("FeedbackError:arg.FeedbackData on {0}", arg.MessageTokenId)));
 
                     ReceiveFeedbackDataComplete(this, arg);
                 }
@@ -504,7 +507,8 @@ namespace TcpFramework.Client
                 }
             }
             else
-            {                          
+            {
+                string StatusErrorInfo = receiveSendEventArgs.SocketError.ToString();
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
 
@@ -513,6 +517,8 @@ namespace TcpFramework.Client
                     ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
                     arg.MessageTokenId = receiveSendToken.messageTokenId;
                     arg.FeedbackData = null;
+
+                    LogManager.Log("发送数据到服务端失败!", new Exception(string.Format("FeedbackError:messageTokenId:{0}因{1}而主动设置为NULL", arg.MessageTokenId, StatusErrorInfo)));
 
                     ReceiveFeedbackDataComplete(this, arg);
                 }                                                    
@@ -625,6 +631,8 @@ namespace TcpFramework.Client
                         ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();                            
                         arg.MessageTokenId = theConnectingToken.ArrayOfMessageReadyToSend[i].TokenId;                            
                         arg.FeedbackData = null;
+
+                        LogManager.Log("ConnectionErr!", new Exception(string.Format("FeedbackError:messageTokenId:{0} 因连接错误主动关闭并返回NULL数据", arg.MessageTokenId)));
                             
                         ReceiveFeedbackDataComplete(this, arg);                                                 
                     }
