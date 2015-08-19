@@ -255,6 +255,7 @@ namespace TcpFramework.Client
             
             if (receiveSendEventArgs.SocketError != SocketError.Success)
             {
+                LogManager.Log(string.Format("SocketError:{0} on {1}",receiveSendEventArgs.SocketError,receiveSendEventArgs.AcceptSocket.RemoteEndPoint), new ArgumentException("SocketError"));
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
                 return;
@@ -262,6 +263,7 @@ namespace TcpFramework.Client
             
             if (receiveSendEventArgs.BytesTransferred == 0)
             {
+                LogManager.Log(string.Format("SocketError:{0} on {1} for byte transfer equal zero", receiveSendEventArgs.SocketError, receiveSendEventArgs.AcceptSocket.RemoteEndPoint), new ArgumentException("BytesTransferred"));
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
                 return;
@@ -512,14 +514,14 @@ namespace TcpFramework.Client
                 receiveSendToken.Reset();
                 StartDisconnect(receiveSendEventArgs);
 
+                ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
+                arg.MessageTokenId = receiveSendToken.messageTokenId;
+                arg.FeedbackData = null;
+
+                LogManager.Log("发送数据到服务端失败!", new Exception(string.Format("FeedbackError:messageTokenId:{0}因{1}而主动设置为NULL", arg.MessageTokenId, StatusErrorInfo)));
+
                 if (ReceiveFeedbackDataComplete != null)
                 {
-                    ReceiveFeedbackDataCompleteEventArg arg = new ReceiveFeedbackDataCompleteEventArg();
-                    arg.MessageTokenId = receiveSendToken.messageTokenId;
-                    arg.FeedbackData = null;
-
-                    LogManager.Log("发送数据到服务端失败!", new Exception(string.Format("FeedbackError:messageTokenId:{0}因{1}而主动设置为NULL", arg.MessageTokenId, StatusErrorInfo)));
-
                     ReceiveFeedbackDataComplete(this, arg);
                 }                                                    
             }
@@ -613,7 +615,9 @@ namespace TcpFramework.Client
         private void ProcessConnectionError(SocketAsyncEventArgs connectEventArgs)
         {            
             try
-            {                
+            {
+                LogManager.Log(string.Format("ConnectError:{0} for {1}", connectEventArgs.SocketError, connectEventArgs.AcceptSocket != null ? connectEventArgs.AcceptSocket.RemoteEndPoint != null ? connectEventArgs.AcceptSocket.RemoteEndPoint.ToString() : "unknown remote address！" : "unknown remote address"), new Exception("Connect Error!"));
+
                 ConnectOpUserToken theConnectingToken = (ConnectOpUserToken)connectEventArgs.UserToken;               
 
                 // If connection was refused by server or timed out or not reachable, then we'll keep this socket.

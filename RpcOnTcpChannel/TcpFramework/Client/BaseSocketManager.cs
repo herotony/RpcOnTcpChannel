@@ -172,6 +172,14 @@ namespace TcpFramework.Client
                         {
                             message = "socket:ok";
                             processor.GetSimplePerf().PerfClientRequestSuccessCounter.Increment();
+
+                            if (result == null) {
+
+                                message = "socket:error_for_return_data_null";
+                                LogManager.Log(string.Format("sendmessage fail on {0} SendStatus:{1}",pickEndPointDesc,sendStatus), new ArgumentNullException("result"));
+                                break;
+                            }
+
                             return result;
                         }
 

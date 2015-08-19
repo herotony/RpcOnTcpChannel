@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!--This file represents the results of running a test suite-->
-<test-results name="D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.dll" total="1" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2015-08-06" time="12:35:35">
-  <environment nunit-version="2.6.2.12296" clr-version="2.0.50727.5420" os-version="Microsoft Windows NT 6.1.7601 Service Pack 1" platform="Win32NT" cwd="D:\Program Files (x86)\NUnit 2.6.2\bin" machine-name="SAOSINWORK-PC" user="saosinwork" user-domain="saosinwork-PC" />
+<test-results name="D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.dll" total="1" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2015-08-19" time="08:56:31">
+  <environment nunit-version="2.6.2.12296" clr-version="2.0.50727.8662" os-version="Microsoft Windows NT 6.2.9200.0" platform="Win32NT" cwd="D:\Program Files (x86)\NUnit 2.6.2\bin" machine-name="SAOSINWORK-PC" user="saosinwork" user-domain="saosinwork-PC" />
   <culture-info current-culture="zh-CN" current-uiculture="zh-CN" />
-  <test-suite type="Assembly" name="D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.dll" executed="True" result="Failure" success="False" time="0.785" asserts="0">
+  <test-suite type="Assembly" name="D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\bin\Debug\NUnitTest.dll" executed="True" result="Failure" success="False" time="0.004" asserts="0">
     <results>
-      <test-suite type="Namespace" name="NUnitTest" executed="True" result="Failure" success="False" time="0.766" asserts="0">
+      <test-suite type="Namespace" name="NUnitTest" executed="True" result="Failure" success="False" time="0.004" asserts="0">
         <results>
-          <test-suite type="TestFixture" name="Test_HttpManager" executed="True" result="Failure" success="False" time="0.763" asserts="0">
+          <test-suite type="TestFixture" name="Test_HttpManager" executed="True" result="Failure" success="False" time="0.003" asserts="0">
             <results>
-              <test-case name="NUnitTest.Test_HttpManager.TestSendDataTo63" executed="True" result="Failure" success="False" time="0.744" asserts="1">
+              <test-case name="NUnitTest.Test_HttpManager.TestSendDataTo63" executed="True" result="Failure" success="False" time="0.002" asserts="1">
                 <failure>
-                  <message><![CDATA[  Expected string length 2 but was 14. Strings differ at index 0.
+                  <message><![CDATA[  Expected string length 2 but was 13. Strings differ at index 0.
   Expected: "ok"
-  But was:  "failbycallback"
+  But was:  "未找到对应方法名:test"
   -----------^
 ]]></message>
                   <stack-trace><![CDATA[在 NUnitTest.Test_HttpManager.TestSendDataTo63() 位置 d:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\NUnitTest\Test_HttpManager.cs:行号 75
