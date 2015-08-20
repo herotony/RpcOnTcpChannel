@@ -2,4 +2,3 @@ D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\IProcessGoodDetail\bin\Release\IPr
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\IProcessGoodDetail\bin\Release\IProcessGoodDetail.pdb
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\IProcessGoodDetail\obj\Release\IProcessGoodDetail.dll
 D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\IProcessGoodDetail\obj\Release\IProcessGoodDetail.pdb
-D:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\IProcessGoodDetail\obj\Release\IProcessGoodDetail.csprojResolveAssemblyReference.cache

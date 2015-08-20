@@ -1,0 +1,61 @@
+[17:33:52,065] SocketClient Init by FirstInvoke Completed! ConsumeTime:79 ms INFO  [TcpFramework.Client.BaseSocketManager.Init] [TestRunnerThread]
+[17:33:52,122] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:33:53,140] bizname:test fail in status:socket:timeout requestjson:123 ERROR [HttpManager.Client.GetBizJsonString] [TestRunnerThread]
+[17:33:53,162] 
+message:
+err_desc:由于套接字没有连接并且(当使用一个 sendto 调用发送数据报套接字时)没有提供地址，发送或接收数据的请求没有被接受。
+stacktrace:   在 System.Net.Sockets.Socket.get_RemoteEndPoint()
+   在 TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError(SocketAsyncEventArgs connectEventArgs) 位置 d:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\Client\ClientSocketProcessor.cs:行号 619
+source:System ERROR [TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError] [6]
+[17:33:56,422] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:33:57,422] bizname:test fail in status:socket:timeout requestjson:123 ERROR [HttpManager.Client.GetBizJsonString] [TestRunnerThread]
+[17:33:57,423] 
+message:
+err_desc:由于套接字没有连接并且(当使用一个 sendto 调用发送数据报套接字时)没有提供地址，发送或接收数据的请求没有被接受。
+stacktrace:   在 System.Net.Sockets.Socket.get_RemoteEndPoint()
+   在 TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError(SocketAsyncEventArgs connectEventArgs) 位置 d:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\Client\ClientSocketProcessor.cs:行号 619
+source:System ERROR [TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError] [6]
+[17:33:58,592] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:33:59,593] bizname:test fail in status:socket:timeout requestjson:123 ERROR [HttpManager.Client.GetBizJsonString] [TestRunnerThread]
+[17:33:59,597] 
+message:
+err_desc:由于套接字没有连接并且(当使用一个 sendto 调用发送数据报套接字时)没有提供地址，发送或接收数据的请求没有被接受。
+stacktrace:   在 System.Net.Sockets.Socket.get_RemoteEndPoint()
+   在 TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError(SocketAsyncEventArgs connectEventArgs) 位置 d:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\Client\ClientSocketProcessor.cs:行号 619
+source:System ERROR [TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError] [6]
+[17:34:05,997] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:34:06,998] bizname:test fail in status:socket:timeout requestjson:123 ERROR [HttpManager.Client.GetBizJsonString] [TestRunnerThread]
+[17:34:07,003] 
+message:
+err_desc:由于套接字没有连接并且(当使用一个 sendto 调用发送数据报套接字时)没有提供地址，发送或接收数据的请求没有被接受。
+stacktrace:   在 System.Net.Sockets.Socket.get_RemoteEndPoint()
+   在 TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError(SocketAsyncEventArgs connectEventArgs) 位置 d:\GitHubData\RpcOnTcpChannel\RpcOnTcpChannel\TcpFramework\Client\ClientSocketProcessor.cs:行号 619
+source:System ERROR [TcpFramework.Client.ClientSocketProcessor.ProcessConnectionError] [6]
+[17:35:29,705] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:35:30,413] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:35:37,661] SocketClient Init by FirstInvoke Completed! ConsumeTime:80 ms INFO  [TcpFramework.Client.BaseSocketManager.Init] [TestRunnerThread]
+[17:35:37,693] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:35:57,353] SocketClient Init by FirstInvoke Completed! ConsumeTime:79 ms INFO  [TcpFramework.Client.BaseSocketManager.Init] [TestRunnerThread]
+[17:35:57,383] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:36:18,853] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:36:18,861] 
+message:发送数据到服务端失败!
+err_desc:FeedbackError:messageTokenId:0因ConnectionReset而主动设置为NULL
+stacktrace:
+source: ERROR [TcpFramework.Client.ClientSocketProcessor.ProcessSend] [TestRunnerThread]
+[17:36:19,863] bizname:test fail in status:socket:timeout requestjson:123 ERROR [HttpManager.Client.GetBizJsonString] [TestRunnerThread]
+[17:42:28,737] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:42:28,737] poolKey:10.9.60.63_6661 's pool empty now with count:0 INFO  [TcpFramework.Client.ClientSocketProcessor.ReuseHeartBeatSAEA] [TestRunnerThread]
+[17:42:28,738] poolKey:10.9.60.63_6661 's pool empty now with count:0 INFO  [TcpFramework.Client.ClientSocketProcessor.ReuseHeartBeatSAEA] [TestRunnerThread]
+[17:50:35,826] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:50:35,826] 
+message:发送数据到服务端失败!
+err_desc:FeedbackError:messageTokenId:0因ConnectionReset而主动设置为NULL
+stacktrace:
+source: ERROR [TcpFramework.Client.ClientSocketProcessor.ProcessSend] [TestRunnerThread]
+[17:50:36,826] bizname:test fail in status:socket:timeout requestjson:123 ERROR [HttpManager.Client.GetBizJsonString] [TestRunnerThread]
+[17:55:08,828] SocketClient Init by FirstInvoke Completed! ConsumeTime:98 ms INFO  [TcpFramework.Client.BaseSocketManager.Init] [TestRunnerThread]
+[17:55:08,863] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:55:10,077] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:55:11,925] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[17:55:14,166] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]

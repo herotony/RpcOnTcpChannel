@@ -1,0 +1,6 @@
+[09:15:31,413] SocketClient Init by FirstInvoke Completed! ConsumeTime:80 ms INFO  [TcpFramework.Client.BaseSocketManager.Init] [TestRunnerThread]
+[09:15:31,445] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[09:15:42,821] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[09:15:44,230] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[09:15:50,502] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]
+[09:15:51,247] pick endpoint - addr:10.9.60.63 port:6661 INFO  [TcpFramework.Client.BaseSocketManager.SendRequest] [TestRunnerThread]

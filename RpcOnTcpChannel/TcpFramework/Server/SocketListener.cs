@@ -147,33 +147,45 @@ namespace TcpFramework.Server
 
         private void StartAccept()
         {
-            this.maxConcurrentConnection.WaitOne();
+            try {
 
-            SocketAsyncEventArgs acceptEventArg;
+                this.maxConcurrentConnection.WaitOne();
 
-            if (this.poolOfAcceptEventArgs.Count > 1)
-            {
-                try
+                SocketAsyncEventArgs acceptEventArg;
+
+                if (this.poolOfAcceptEventArgs.Count > 1)
                 {
-                    acceptEventArg = this.poolOfAcceptEventArgs.Pop();
+                    try
+                    {
+                        acceptEventArg = this.poolOfAcceptEventArgs.Pop();
+                    }
+                    catch
+                    {
+                        acceptEventArg = new SocketAsyncEventArgs();
+                        acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
+                    }
                 }
-                catch
+                else
                 {
                     acceptEventArg = new SocketAsyncEventArgs();
                     acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
                 }
-            }
-            else
-            {
-                acceptEventArg = new SocketAsyncEventArgs();
-                acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
-            }                       
 
-            bool willRaiseEvent = listenSocket.AcceptAsync(acceptEventArg);
-            if (!willRaiseEvent)
-            {               
-                ProcessAccept(acceptEventArg);
+                if (listenSocket == null)
+                    throw new ArgumentNullException("listenSocket");
+
+                bool willRaiseEvent = listenSocket.AcceptAsync(acceptEventArg);
+                if (!willRaiseEvent)
+                {
+                    ProcessAccept(acceptEventArg);
+                }
+
             }
+            catch (Exception startAccetpErr) {
+
+                LogManager.Log("startAcceptErr", startAccetpErr);
+            }
+           
         }
 
         private void LoopToStartAccept()
